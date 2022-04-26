@@ -222,7 +222,7 @@ async def delete_cookie_cache(value='', key='cookie', all=False):
         pass
 
 # 获取user_id最后查询的uid
-async def get_last_query(user_id):
+async def get_last_query(user_id):  # todo use databases or sqlmodel
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute('''CREATE TABLE IF NOT EXISTS last_query(

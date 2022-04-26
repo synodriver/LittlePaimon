@@ -75,7 +75,7 @@ class Service:
 
     支持的触发条件:
     `on_message`,
-    `on_prefix`, `on_fullmatch`, `on_suffix`,
+    `on_startswith`, `on_fullmatch`, `on_endswith`,
     `on_keyword`, `on_rex`,
     `on_command`, `on_natural_language`
 
@@ -202,7 +202,7 @@ class Service:
         return deco
 
 
-    def on_prefix(self, *prefix, only_to_me=False) -> Callable:
+    def on_startswith(self, *prefix, only_to_me=False) -> Callable:
         if len(prefix) == 1 and not isinstance(prefix[0], str):
             prefix = prefix[0]
         def deco(func) -> Callable:
@@ -245,7 +245,7 @@ class Service:
         return deco
 
 
-    def on_suffix(self, *suffix, only_to_me=False) -> Callable:
+    def on_endswith(self, *suffix, only_to_me=False) -> Callable:
         if len(suffix) == 1 and not isinstance(suffix[0], str):
             suffix = suffix[0]
         def deco(func) -> Callable:

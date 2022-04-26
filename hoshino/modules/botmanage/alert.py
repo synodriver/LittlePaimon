@@ -1,8 +1,18 @@
-from nonebot import on_notice, NoticeSession
+from nonebot import on_notice
+from nonebot.adapters.onebot.v11 import GroupDecreaseNoticeEvent, Bot
 
-@on_notice('group_decrease.kick_me')
-async def kick_me_alert(session: NoticeSession):
-    group_id = session.event.group_id
-    operator_id = session.event.operator_id
-    coffee = session.bot.config.SUPERUSERS[0]
-    await session.bot.send_private_msg(self_id=session.event.self_id, user_id=coffee, message=f'被Q{operator_id}踢出群{group_id}')
+
+async def check_event(event: GroupDecreaseNoticeEvent):
+    return True if isinstance(event, GroupDecreaseNoticeEvent) and event.user_id == event.self_id else False
+
+
+matcher = on_notice(check_event)
+
+
+@matcher.handle()
+async def kick_me_alert(bot: Bot, event: GroupDecreaseNoticeEvent):
+    group_id = event.group_id
+    operator_id = event.operator_id
+    coffee = list(bot.config.SUPERUSERS)[0]
+    await bot.send_private_msg(user_id=int(coffee),
+                               message=f'被Q{operator_id}踢出群{group_id}')

@@ -11,7 +11,7 @@ async def ls_group(session: CommandSession):
         msg = [ "{group_id} {group_name}".format_map(g) for g in gl ]
         msg = "\n".join(msg)
         msg = f"bot:{sid}\n| 群号 | 群名 | 共{len(gl)}个群\n" + msg
-        await bot.send_private_msg(self_id=sid, user_id=bot.config.SUPERUSERS[0], message=msg)
+        await bot.send_private_msg(self_id=sid, user_id=int(list(bot.config.SUPERUSERS)[0]), message=msg)
 
 
 async def ls_friend(session: CommandSession):

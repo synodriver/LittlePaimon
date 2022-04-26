@@ -4,7 +4,7 @@ from collections import defaultdict
 import pygtrie
 import zhconv
 
-import hoshino
+import nonebot
 from hoshino import util
 from hoshino.typing import CQEvent, List
 
@@ -28,12 +28,12 @@ class PrefixTrigger(BaseTrigger):
             self.trie[prefix].append(sf)
             if prefix_cht != prefix:
                 self.trie[prefix_cht].append(sf)
-            hoshino.logger.warning(f"Prefix trigger `{prefix}` added multiple handlers: {sf.__name__}@{sf.sv.name}")
+            nonebot.logger.warning(f"Prefix trigger `{prefix}` added multiple handlers: {sf.__name__}@{sf.sv.name}")
         else:
             self.trie[prefix] = [sf]
             if prefix_cht != prefix:
                 self.trie[prefix_cht] = [sf]
-            hoshino.logger.debug(f"Succeed to add prefix trigger `{prefix}`")
+            nonebot.logger.debug(f"Succeed to add prefix trigger `{prefix}`")
 
     def find_handler(self, event: CQEvent) -> List["ServiceFunc"]:
         first_msg_seg = event.message[0]
@@ -65,12 +65,12 @@ class SuffixTrigger(BaseTrigger):
             self.trie[suffix_r].append(sf)
             if suffix_r_cht != suffix_r:
                 self.trie[suffix_r_cht].append(sf)
-            hoshino.logger.warning(f"Suffix trigger `{suffix}` added multi handler: `{sf.__name__}`")
+            nonebot.logger.warning(f"Suffix trigger `{suffix}` added multi handler: `{sf.__name__}`")
         else:
             self.trie[suffix_r] = [sf]
             if suffix_r_cht != suffix_r:
                 self.trie[suffix_r_cht] = [sf]
-            hoshino.logger.debug(f"Succeed to add suffix trigger `{suffix}`")
+            nonebot.logger.debug(f"Succeed to add suffix trigger `{suffix}`")
 
     def find_handler(self, event: CQEvent) -> List["ServiceFunc"]:
         last_msg_seg = event.message[-1]
@@ -100,10 +100,10 @@ class KeywordTrigger(BaseTrigger):
             keyword = util.normalize_str(keyword)
         if keyword in self.allkw:
             self.allkw[keyword].append(sf)
-            hoshino.logger.warning(f"Keyword trigger `{keyword}` added multi handler: `{sf.__name__}`")
+            nonebot.logger.warning(f"Keyword trigger `{keyword}` added multi handler: `{sf.__name__}`")
         else:
             self.allkw[keyword] = [sf]
-            hoshino.logger.debug(f"Succeed to add keyword trigger `{keyword}`")
+            nonebot.logger.debug(f"Succeed to add keyword trigger `{keyword}`")
 
     def find_handler(self, event: CQEvent) -> List["ServiceFunc"]:
         ret = []
@@ -122,7 +122,7 @@ class RexTrigger(BaseTrigger):
 
     def add(self, rex: re.Pattern, sf: "ServiceFunc"):
         self.allrex[rex].append(sf)
-        hoshino.logger.debug(f"Succeed to add rex trigger `{rex.pattern}`")
+        nonebot.logger.debug(f"Succeed to add rex trigger `{rex.pattern}`")
 
     def find_handler(self, event: CQEvent) -> "ServiceFunc":
         ret = []

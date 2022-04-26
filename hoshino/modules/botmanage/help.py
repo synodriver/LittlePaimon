@@ -1,7 +1,9 @@
-from hoshino import Service, priv, __version__
-from hoshino.typing import CQEvent
+import nonebot
 
-sv = Service('_help_', manage_priv=priv.SUPERUSER, visible=False)
+from hoshino import __version__
+from nonebot.adapters.onebot.v11 import MessageEvent, Bot
+from nonebot import on_startswith
+# sv = Service('_help_', manage_priv=priv.SUPERUSER, visible=False)
 
 TOP_MANUAL = f'''
 ====================
@@ -42,19 +44,19 @@ def gen_bundle_manual(bundle_name, service_list, gid):
     return '\n'.join(manual)
 
 
-@sv.on_prefix('#帮助')
-async def send_help(bot, ev: CQEvent):
-    gid = ev.group_id
-    arg = ev.message.extract_plain_text().strip()
-    bundles = Service.get_bundles()
+M = on_startswith('#帮助')
+async def send_help(bot: Bot, event: MessageEvent):
+    gid = event.group_id
+    arg = event.message.extract_plain_text().strip()
+    bundles = nonebot.get_loaded_plugins()
     services = Service.get_loaded_services()
     if not arg:
-        await bot.send(ev, TOP_MANUAL)
+        await bot.send(event, TOP_MANUAL)
     elif arg in bundles:
         msg = gen_bundle_manual(arg, bundles[arg], gid)
-        await bot.send(ev, msg)
+        await bot.send(event, msg)
     elif arg in services:
         s = services[arg]
         msg = gen_service_manual(s, gid)
-        await bot.send(ev, msg)
+        await bot.send(event, msg)
     # else: ignore

@@ -4,11 +4,12 @@
 """
 
 from datetime import datetime
+import nonebot
 
-import hoshino
-from hoshino import config
-from hoshino.typing import CQEvent
+from nonebot.adapters.onebot.v11 import MessageEvent
 
+
+config = nonebot.get_driver().config
 BLACK = -999
 DEFAULT = 0
 NORMAL = 1
@@ -20,7 +21,7 @@ GUILDADMIN = 52
 SUPERUSER = 999
 SU = SUPERUSER
 
-#===================== block list =======================#
+# ===================== block list =======================#
 _black_group = {}  # Dict[group_id, expr_time]
 _black_user = {}  # Dict[user_id, expr_time]
 
@@ -30,7 +31,7 @@ def set_block_group(group_id, time):
 
 
 def set_block_user(user_id, time):
-    if user_id not in hoshino.config.SUPERUSERS:
+    if user_id not in config.SUPERUSERS:
         _black_user[user_id] = datetime.now() + time
 
 
@@ -48,14 +49,14 @@ def check_block_user(user_id):
     return bool(user_id in _black_user)
 
 
-#========================================================#
+# ========================================================#
 
 
-def get_user_priv(ev: CQEvent):
+def get_user_priv(ev: MessageEvent):
     uid = ev.user_id
-    if uid in hoshino.config.SUPERUSERS:
+    if uid in config.SUPERUSERS:
         return SUPERUSER
-    if uid in hoshino.config.GUILDADMIN:
+    if uid in config.GUILDADMIN:
         return GUILDADMIN
     if check_block_user(uid):
         return BLACK
@@ -69,7 +70,7 @@ def get_user_priv(ev: CQEvent):
             elif role == 'admin':
                 return ADMIN
             elif role == 'administrator':
-                return ADMIN    # for cqhttpmirai
+                return ADMIN  # for cqhttpmirai
             elif role == 'owner':
                 return OWNER
         return NORMAL
@@ -79,10 +80,11 @@ def get_user_priv(ev: CQEvent):
         return NORMAL
     return NORMAL
 
-def get_target_priv(bot,ev: CQEvent,uid):
-    if uid in hoshino.config.SUPERUSERS:
+
+def get_target_priv(bot, ev: MessageEvent, uid):
+    if uid in config.SUPERUSERS:
         return SUPERUSER
-    if uid in hoshino.config.GUILDADMIN:
+    if uid in config.GUILDADMIN:
         return GUILDADMIN
     if check_block_user(uid):
         return BLACK
@@ -90,13 +92,13 @@ def get_target_priv(bot,ev: CQEvent,uid):
         return WHITE
     if ev['message_type'] == 'group':
         if not ev.anonymous:
-            role = bot.get_group_member_info(ev.group_id,uid)['role']
+            role = bot.get_group_member_info(ev.group_id, uid)['role']
             if role == 'member':
                 return NORMAL
             elif role == 'admin':
                 return ADMIN
             elif role == 'administrator':
-                return ADMIN    # for cqhttpmirai
+                return ADMIN  # for cqhttpmirai
             elif role == 'owner':
                 return OWNER
         return NORMAL
@@ -106,11 +108,13 @@ def get_target_priv(bot,ev: CQEvent,uid):
         return NORMAL
     return NORMAL
 
-def check_priv(ev: CQEvent, require: int) -> bool:
+
+def check_priv(ev: MessageEvent, require: int) -> bool:
     if ev['message_type'] == 'group' or ev['message_type'] == 'guild':
         return bool(get_user_priv(ev) >= require)
     else:
-        return True  
+        return True
 
-def check_target_priv(bot,ev: CQEvent,uid, require: int) -> bool:
-    return bool(bot,get_target_priv(bot,ev,uid) >= require)
+
+def check_target_priv(bot, ev: MessageEvent, uid, require: int) -> bool:
+    return bool(bot, get_target_priv(bot, ev, uid) >= require)

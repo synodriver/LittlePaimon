@@ -5,23 +5,23 @@ import unicodedata
 from collections import defaultdict
 from datetime import datetime, timedelta
 from io import BytesIO
+from typing import Union
 
 import pytz
 import zhconv
-from aiocqhttp.exceptions import ActionFailed
-from aiocqhttp.message import escape
+from nonebot.exception import ActionFailed
+from nonebot.adapters.onebot.v11.utils import escape
+from nonebot.adapters.onebot.v11 import MessageEvent, Message
+
 from matplotlib import pyplot as plt
 from PIL import Image
 
 import hoshino
-from hoshino.typing import CQEvent, Message, Union
 
 try:
     import ujson as json
 except:
     import json
-
-
 
 
 def load_config(inbuilt_file_var):
@@ -39,7 +39,7 @@ def load_config(inbuilt_file_var):
         return {}
 
 
-async def delete_msg(ev: CQEvent):
+async def delete_msg(ev: MessageEvent):
     try:
         await hoshino.get_bot().delete_msg(self_id=ev.self_id, message_id=ev.message_id)
     except ActionFailed as e:
@@ -48,11 +48,12 @@ async def delete_msg(ev: CQEvent):
         hoshino.logger.exception(e)
 
 
-async def silence(ev: CQEvent, ban_time, skip_su=True):
+async def silence(ev: MessageEvent, ban_time, skip_su=True):
     try:
         if skip_su and ev.user_id in hoshino.config.SUPERUSERS:
             return
-        await hoshino.get_bot().set_group_ban(self_id=ev.self_id, group_id=ev.group_id, user_id=ev.user_id, duration=ban_time)
+        await hoshino.get_bot().set_group_ban(self_id=ev.self_id, group_id=ev.group_id, user_id=ev.user_id,
+                                              duration=ban_time)
     except ActionFailed as e:
         if 'NOT_MANAGEABLE' in str(e):
             return
@@ -79,7 +80,7 @@ def fig2b64(plt: plt) -> str:
 def concat_pic(pics, border=5):
     num = len(pics)
     w, h = pics[0].size
-    des = Image.new('RGBA', (w, num * h + (num-1) * border), (255, 255, 255, 255))
+    des = Image.new('RGBA', (w, num * h + (num - 1) * border), (255, 255, 255, 255))
     for i, pic in enumerate(pics):
         des.paste(pic, (0, i * (h + border)), pic)
     return des
@@ -97,8 +98,11 @@ def normalize_str(string) -> str:
 
 MONTH_NAME = ('睦月', '如月', '弥生', '卯月', '皐月', '水無月',
               '文月', '葉月', '長月', '神無月', '霜月', '師走')
-def month_name(x:int) -> str:
+
+
+def month_name(x: int) -> str:
     return MONTH_NAME[x - 1]
+
 
 DATE_NAME = (
     '初一', '初二', '初三', '初四', '初五', '初六', '初七', '初八', '初九', '初十',
@@ -106,8 +110,11 @@ DATE_NAME = (
     '廿一', '廿二', '廿三', '廿四', '廿五', '廿六', '廿七', '廿八', '廿九', '三十',
     '卅一'
 )
+
+
 def date_name(x: int) -> str:
     return DATE_NAME[x - 1]
+
 
 NUM_NAME = (
     '〇〇', '〇一', '〇二', '〇三', '〇四', '〇五', '〇六', '〇七', '〇八', '〇九',
@@ -121,6 +128,8 @@ NUM_NAME = (
     '八〇', '八一', '八二', '八三', '八四', '八五', '八六', '八七', '八八', '八九',
     '九〇', '九一', '九二', '九三', '九四', '九五', '九六', '九七', '九八', '九九',
 )
+
+
 def time_name(hh: int, mm: int) -> str:
     return NUM_NAME[hh] + NUM_NAME[mm]
 
@@ -139,6 +148,7 @@ class FreqLimiter:
     def left_time(self, key) -> float:
         return self.next_time[key] - time.time()
 
+
 class PriFreqLimiter:
     def __init__(self, default_cd_seconds):
         self.next_time = defaultdict(lambda: defaultdict(float))
@@ -152,6 +162,7 @@ class PriFreqLimiter:
 
     def left_time(self, group, user) -> int:
         return self.next_time[group][user] - time.time()
+
 
 class DailyNumberLimiter:
     tz = pytz.timezone('Asia/Shanghai')
@@ -195,7 +206,6 @@ def filt_message(message: Union[Message, str]):
         return message
     else:
         raise TypeError
-
 
 
 def render_list(lines, prompt="") -> str:

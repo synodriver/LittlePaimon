@@ -49,7 +49,7 @@ async def mys(bot,ev):
     await asyncio.sleep(2)
     await bot.send(ev,'---1.请发送指令[mybcookie (cookie)],()内为你要填入的信息---')
 
-@sv.on_prefix('mybcookie')
+@sv.on_startswith('mybcookie')
 async def choose_cookie(bot,ev):
     qid = str(ev.user_id)
     cookie = ev.message.extract_plain_text()
@@ -73,7 +73,7 @@ async def choose_cookie(bot,ev):
         await asyncio.sleep(1)
         await bot.send(ev,msg)
 
-@sv.on_prefix('myb地址')
+@sv.on_startswith('myb地址')
 async def choose_address(bot,ev):
     if ev.message_type != 'private':
         await bot.send(ev,'这个功能只能私聊使用哦，请撤回并私聊派蒙',at_sender=True)
@@ -91,7 +91,7 @@ async def choose_address(bot,ev):
         save_data()
         await bot.send(ev,'---3.请发送指令[myb商品 (商品关键词)]，派蒙会列出含有关键词的商品名和id---')
 
-@sv.on_prefix('myb商品')
+@sv.on_startswith('myb商品')
 async def choose_goods(bot,ev):
     if ev.message_type != 'private':
         await bot.send(ev,'这个功能只能私聊使用哦，请撤回并私聊派蒙',at_sender=True)
@@ -111,7 +111,7 @@ async def choose_goods(bot,ev):
     await asyncio.sleep(1)
     await bot.send(ev,'---4.请发送指令[myb商品选择 (商品的id)]来添加要兑换的商品，多个商品id间用空格隔开，---')
 
-@sv.on_prefix('myb商品选择')
+@sv.on_startswith('myb商品选择')
 async def choose_goods_id(bot,ev):
     if ev.message_type != 'private':
         await bot.send(ev,'这个功能只能私聊使用哦，请撤回并私聊派蒙',at_sender=True)
@@ -131,7 +131,7 @@ async def choose_goods_id(bot,ev):
     await asyncio.sleep(1)
     await bot.send(ev,'---5.请发送指令[myb时间 (时间)]，格式：米游币时间 2022年02月10日12:00:00---')
 
-@sv.on_prefix('myb时间')
+@sv.on_startswith('myb时间')
 async def choose_date(bot,ev):
     if ev.message_type != 'private':
         await bot.send(ev,'这个功能只能私聊使用哦，请撤回并私聊派蒙',at_sender=True)

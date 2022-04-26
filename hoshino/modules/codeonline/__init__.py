@@ -10,7 +10,7 @@ HELP_MSG = '''
 sv = hoshino.Service('code', bundle='详细', help_=HELP_MSG, enable_on_default=False)
 
 
-@sv.on_prefix('code')
+@sv.on_startswith('code')
 async def code(bot, ev: CQEvent):
     res = await run(ev.message.extract_plain_text())
     await bot.send(ev, filt_message(res), at_sender=True)

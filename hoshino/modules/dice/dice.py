@@ -49,7 +49,7 @@ async def dice(bot, ev):
     await do_dice(bot, ev, num, min_, max_, opr, offset)
 
 
-@sv.on_prefix('.qj')
+@sv.on_startswith('.qj')
 async def kc_marriage(bot, ev: CQEvent):
     wife = filt_message(ev.message.extract_plain_text().strip())
     tip = f'与{wife}的ケッコンカッコカリ结果是：' if wife else '的ケッコンカッコカリ结果是：'

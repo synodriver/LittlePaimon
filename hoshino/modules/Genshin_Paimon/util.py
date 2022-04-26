@@ -12,7 +12,10 @@ import datetime
 import functools
 import inspect
 from nonebot import get_bot
-from .db_util import get_private_cookie, get_cookie_cache, get_public_cookie, limit_public_cookie, update_cookie_cache,get_last_query,update_last_query,delete_cookie
+from nonebot.adapters.onebot.v11 import Bot, Event, MessageEvent, GroupMessageEvent
+from .db_util import get_private_cookie, get_cookie_cache, get_public_cookie, limit_public_cookie, update_cookie_cache, \
+    get_last_query, update_last_query, delete_cookie
+
 
 async def get_use_cookie(user_id, uid='', mys_id='', action=''):
     cache_cookie = await get_cookie_cache(uid, 'uid')
@@ -30,12 +33,12 @@ async def get_use_cookie(user_id, uid='', mys_id='', action=''):
             return None
         else:
             logger.info(f'---派蒙调用{public_cookie[0]}号公共cookie执行{action}操作---')
-            return {'type':'public', 'cookie': public_cookie[1], 'no': public_cookie[0]}
+            return {'type': 'public', 'cookie': public_cookie[1], 'no': public_cookie[0]}
     else:
         for user_id_, cookie, uid_, mys_id_ in cookies:
             if (uid and uid_ == uid) or (mys_id and mys_id_ == mys_id):
                 logger.info(f'---派蒙调用用户{user_id_}的uid{uid_}私人cookie执行{action}操作---')
-                return {'type':'private', 'user_id': user_id_, 'cookie': cookie, 'uid': uid_, 'mys_id': mys_id_}
+                return {'type': 'private', 'user_id': user_id_, 'cookie': cookie, 'uid': uid_, 'mys_id': mys_id_}
         if cache_cookie:
             if cache_cookie['type'] == 'public':
                 logger.info(f'---派蒙调用{uid}的缓存公共cookie执行{action}操作---')
@@ -44,7 +47,9 @@ async def get_use_cookie(user_id, uid='', mys_id='', action=''):
             return cache_cookie
         use_cookie = random.choice(cookies)
         logger.info(f'---派蒙调用用户{use_cookie[0]}的uid{use_cookie[2]}私人cookie执行{action}操作---')
-        return {'type':'private', 'user_id': use_cookie[0], 'cookie': use_cookie[1], 'uid': use_cookie[2], 'mys_id': use_cookie[3]}
+        return {'type': 'private', 'user_id': use_cookie[0], 'cookie': use_cookie[1], 'uid': use_cookie[2],
+                'mys_id': use_cookie[3]}
+
 
 async def get_own_cookie(uid='', mys_id='', action=''):
     if uid:
@@ -58,7 +63,8 @@ async def get_own_cookie(uid='', mys_id='', action=''):
     else:
         cookie = cookie[0]
         logger.info(f'---派蒙调用用户{cookie[0]}的uid{cookie[2]}私人cookie执行{action}操作---')
-        return {'type':'private', 'user_id': cookie[0], 'cookie': cookie[1], 'uid': cookie[2], 'mys_id': cookie[3]}
+        return {'type': 'private', 'user_id': cookie[0], 'cookie': cookie[1], 'uid': cookie[2], 'mys_id': cookie[3]}
+
 
 # 检查数据返回状态，10001为ck过期了，10101为达到每日30次上线了
 async def check_retcode(data, cookie, uid):
@@ -109,6 +115,7 @@ def cache(ttl=datetime.timedelta(hours=1), **kwargs):
 
     return wrap
 
+
 # 获取message中的艾特对象
 async def get_at_target(msg):
     for msg_seg in msg:
@@ -116,8 +123,9 @@ async def get_at_target(msg):
             return msg_seg.data['qq']
     return None
 
+
 # message预处理，获取uid、干净的msg、user_id、是否缓存
-async def get_uid_in_msg(ev):
+async def get_uid_in_msg(ev: MessageEvent):
     msg = ev.message
     msgt = msg.extract_plain_text().strip()
     if not msg:
@@ -141,6 +149,7 @@ class Dict(dict):
     __setattr__ = dict.__setitem__
     __getattr__ = dict.__getitem__
 
+
 # 图片转b64，q为质量（压缩比例）
 def pil2b64(data, q=85):
     bio = BytesIO()
@@ -149,17 +158,20 @@ def pil2b64(data, q=85):
     base64_str = base64.b64encode(bio.getvalue()).decode()
     return 'base64://' + base64_str
 
+
 # md5加密
 def md5(text: str) -> str:
     md5 = hashlib.md5()
     md5.update(text.encode())
     return md5.hexdigest()
 
+
 def random_hex(length):
     result = hex(random.randint(0, 16 ** length)).replace('0x', '').upper()
     if len(result) < length:
         result = '0' * (length - len(result)) + result
     return result
+
 
 # 米游社headers的ds_token，对应版本2.11.1
 def get_ds(q="", b=None) -> str:
@@ -173,19 +185,21 @@ def get_ds(q="", b=None) -> str:
     c = md5("salt=" + s + "&t=" + t + "&r=" + r + "&b=" + br + "&q=" + q)
     return f"{t},{r},{c}"
 
+
 # 米游社爬虫headers
-def get_headers(cookie, q='',b=None):
-    headers ={
+def get_headers(cookie, q='', b=None):
+    headers = {
         'DS': get_ds(q, b),
         'Origin': 'https://webstatic.mihoyo.com',
         'Cookie': cookie,
         'x-rpc-app_version': "2.11.1",
         'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS '
-                    'X) AppleWebKit/605.1.15 (KHTML, like Gecko) miHoYoBBS/2.11.1',
+                      'X) AppleWebKit/605.1.15 (KHTML, like Gecko) miHoYoBBS/2.11.1',
         'x-rpc-client_type': '5',
         'Referer': 'https://webstatic.mihoyo.com/'
     }
     return headers
+
 
 def get_old_version_ds() -> str:
     s = 'h8w582wxwgqvahcdkpvdhbh2w9casgfl'
@@ -194,11 +208,12 @@ def get_old_version_ds() -> str:
     c = md5("salt=" + s + "&t=" + t + "&r=" + r)
     return f"{t},{r},{c}"
 
+
 def get_sign_headers(cookie):
-    headers={
+    headers = {
         'User_Agent': 'Mozilla/5.0 (Linux; Android 10; MIX 2 Build/QKQ1.190825.002; wv) AppleWebKit/537.36 ('
-            'KHTML, like Gecko) Version/4.0 Chrome/83.0.4103.101 Mobile Safari/537.36 '
-            'miHoYoBBS/2.3.0',
+                      'KHTML, like Gecko) Version/4.0 Chrome/83.0.4103.101 Mobile Safari/537.36 '
+                      'miHoYoBBS/2.3.0',
         'Cookie': cookie,
         'x-rpc-device_id': random_hex(32),
         'Origin': 'https://webstatic.mihoyo.com',
@@ -206,15 +221,16 @@ def get_sign_headers(cookie):
         'DS': get_old_version_ds(),
         'x-rpc-client_type': '5',
         'Referer': 'https://webstatic.mihoyo.com/bbs/event/signin-ys/index.html?bbs_auth_required=true&act_id'
-            '=e202009291139501&utm_source=bbs&utm_medium=mys&utm_campaign=icon',
+                   '=e202009291139501&utm_source=bbs&utm_medium=mys&utm_campaign=icon',
         'x-rpc-app_version': '2.3.0'
     }
     return headers
 
+
 # 检查cookie是否有效，通过查看个人主页来判断
 async def check_cookie(cookie):
     url = 'https://bbs-api.mihoyo.com/user/wapi/getUserFullInfo?gids=2'
-    headers ={
+    headers = {
         'DS': get_ds(),
         'Origin': 'https://webstatic.mihoyo.com',
         'Cookie': cookie,
@@ -222,12 +238,13 @@ async def check_cookie(cookie):
         'x-rpc-client_type': '5',
         'Referer': 'https://webstatic.mihoyo.com/'
     }
-    res = await aiorequests.get(url=url,headers=headers)
+    res = await aiorequests.get(url=url, headers=headers)
     res = await res.json()
     if res['retcode'] != 0:
         return False
     else:
         return True
+
 
 # 向超级用户私聊发送cookie删除信息
 async def send_cookie_delete_msg(cookie_info):
@@ -243,7 +260,6 @@ async def send_cookie_delete_msg(cookie_info):
         logger.info(f'---{msg}---')
         for superuser in get_bot().config.SUPERUSERS:
             try:
-                await get_bot().send_private_msg(user_id=superuser,message=msg + '，派蒙帮你删除啦!')
+                await get_bot().send_private_msg(user_id=int(superuser), message=msg + '，派蒙帮你删除啦!')
             except Exception as e:
                 logger.error(f'发送cookie删除消息失败: {e}')
-

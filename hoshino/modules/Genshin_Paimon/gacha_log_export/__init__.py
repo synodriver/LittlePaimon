@@ -20,7 +20,7 @@ if not os.path.exists(os.path.join(data_path, 'user_gacha_log.json')):
     with open(os.path.join(data_path, 'user_gacha_log.json'),'w',encoding='UTF-8') as f:
         json.dump({},f,ensure_ascii=False)
 
-@sv.on_prefix('导出抽卡记录', 'dcckjl', 'exportgachalog')
+@sv.on_startswith('导出抽卡记录', 'dcckjl', 'exportgachalog')
 async def ckjl(bot,ev):
     if ev.message_type != 'group':
         await bot.send(ev,'在群聊中才能导出抽卡记录文件哦！')
@@ -42,7 +42,7 @@ async def ckjl(bot,ev):
         return
     await bot.upload_group_file(group_id=ev.group_id, file=local_data, name=filetype)
 
-@sv.on_prefix(('更新抽卡记录', '获取抽卡记录', 'updategachalog', 'gxckjl'))
+@sv.on_startswith(('更新抽卡记录', '获取抽卡记录', 'updategachalog', 'gxckjl'))
 async def update_ckjl(bot,ev):
     uid, msg, user_id, use_cache = await get_uid_in_msg(ev)
     if not uid:
@@ -86,7 +86,7 @@ async def update_ckjl(bot,ev):
     gacha_img = await get_gacha_log_img(gacha_data, 'all')
     await bot.send(ev, gacha_img, at_sender=True)
 
-@sv.on_prefix('查看抽卡记录', 'ckjl', 'gachalog')
+@sv.on_startswith('查看抽卡记录', 'ckjl', 'gachalog')
 async def get_ckjl(bot,ev):
     uid, msg, user_id, use_cache = get_uid_in_msg(ev)
     if not uid:
