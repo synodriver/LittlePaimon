@@ -2,18 +2,18 @@
 # import re
 # import hoshino
 # from hoshino import sucmd, HoshinoBot
-# from hoshino.typing import CommandSession, CQHttpError, MessageSegment as ms
+# from nonebot.adapters.onebot.v11 import CommandSession, CQHttpError, MessageSegment as ms
 #
 # @sucmd('billing')
-# async def billing(session: CommandSession):
-#     bot = session.bot
-#     args = session.current_arg_text.split()
+# async def billing(event: CommandSession):
+#     bot = event.bot
+#     args = event.current_arg_text.split()
 #     try:
 #         for i in range(0, len(args), 2):
 #             args[i] = int(args[i])
 #             assert re.fullmatch(r'\d{4}-\d{2}-\d{2}', args[i + 1]), f"{args[i + 1]}不是合法日期"
 #     except (ValueError, AssertionError) as e:
-#         await session.finish(str(e))
+#         await event.finish(str(e))
 #
 #     try:
 #         sid_group = {}
@@ -21,7 +21,7 @@
 #             gs = await bot.get_group_list(self_id=sid)
 #             sid_group[sid] = [g['group_id'] for g in gs]
 #     except CQHttpError as e:
-#         await session.finish(str(e))
+#         await event.finish(str(e))
 #
 #     failed = []
 #     not_found = []
@@ -41,14 +41,14 @@
 #                 except CQHttpError:
 #                     failed.append(gid)
 #                     try:
-#                         await session.send(f"bot{sid} 向 群{gid} 发送billing失败！")
+#                         await event.send(f"bot{sid} 向 群{gid} 发送billing失败！")
 #                     except CQHttpError:
 #                         hoshino.logger.critical((f"bot{sid} 向 群{gid} 发送billing失败！且回报SUPERUSER失败！"))
 #         if not bill_sent_flag and gid not in failed:
 #             not_found.append(gid)
 #
 #     msg = f"发送bill完毕！\n失败{len(failed)}：{failed}\n未找到{len(not_found)}：{not_found}"
-#     await session.send(msg)
+#     await event.send(msg)
 #
 #
 # async def get_group_owner_id(bot: HoshinoBot, self_id, group_id) -> int:

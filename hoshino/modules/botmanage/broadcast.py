@@ -2,15 +2,16 @@ import asyncio
 
 import hoshino
 from hoshino.service import sucmd
-from hoshino.typing import CommandSession, CQHttpError
+from nonebot.adapters.onebot.v11 import MessageEvent
+from nonebot.exception import ActionFailed
 
 
 @sucmd('broadcast', aliases=('bc', '广播'), force_private=False)
-async def broadcast(session: CommandSession):
-    msg = session.current_arg
-    bot = session.bot
-    ev = session.event
-    su = session.event.user_id
+async def broadcast(event: MessageEvent):
+    msg = event.current_arg
+    bot = event.bot
+    ev = event.event
+    su = event.event.user_id
     for sid in hoshino.get_self_ids():
         gl = await bot.get_group_list(self_id=sid)
         gl = [g['group_id'] for g in gl]
@@ -23,7 +24,7 @@ async def broadcast(session: CommandSession):
             try:
                 await bot.send_group_msg(self_id=sid, group_id=g, message=msg)
                 hoshino.logger.info(f'群{g} 投递广播成功')
-            except CQHttpError as e:
+            except ActionFailed as e:
                 hoshino.logger.error(f'群{g} 投递广播失败：{type(e)}')
                 try:
                     await bot.send_private_msg(self_id=sid, user_id=su, message=f'群{g} 投递广播失败：{type(e)}')

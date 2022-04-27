@@ -1,22 +1,21 @@
-import re
-from hoshino import sucmd
-from hoshino.typing import CommandSession
+import asyncio
 
-@sucmd('quit', aliases=('退群',))
-async def quit_group(session: CommandSession):
-    args = session.current_arg_text.split()
-    failed = []
-    succ = []
-    for arg in args:
-        if not re.fullmatch(r'^\d+$', arg):
-            failed.append(arg)
-            continue
-        try:
-            await session.bot.set_group_leave(self_id=session.event.self_id, group_id=arg)
-            succ.append(arg)
-        except:
-            failed.append(arg)
-    msg = f'已尝试退出{len(succ)}个群'
-    if failed:
-        msg += f"\n失败{len(failed)}个群：{failed}"
-    await session.send(msg)
+import re
+from nonebot.adapters.onebot.v11 import Bot, Message
+from nonebot import on_command
+from nonebot.params import CommandArg
+
+matcher = on_command("quit", aliases={"退群"})
+
+
+@matcher.handle()
+async def quit_group(bot: Bot, arg: Message = CommandArg()):
+    args: str = arg.extract_plain_text().split()
+    m: list = re.findall(r'^\d+$', args)
+    if not m:
+        return
+    await asyncio.gather(*(bot.set_group_leave(group_id=int(gid)) for gid in m))
+    msg = f'已尝试退出{len(m)}个群'
+    # if failed:
+    #     msg += f"\n失败{len(failed)}个群：{failed}"
+    await matcher.send(msg)

@@ -3,26 +3,34 @@ import datetime
 from io import BytesIO
 import os
 from PIL import Image, ImageDraw, ImageFont
-from hoshino import aiorequests
+import aiohttp
 from ..util import pil2b64
-from hoshino.typing import MessageSegment
+from nonebot.adapters.onebot.v11 import MessageSegment
 
-res_path = os.path.join(os.path.dirname(os.path.dirname(__file__)),'res')
+res_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'res')
+
 
 def get_font(size):
-    return ImageFont.truetype(os.path.join(res_path,'msyhbd.ttc'), size)
+    return ImageFont.truetype(os.path.join(res_path, 'msyhbd.ttc'), size)
+
 
 def get_odd_time(seconds):
     m, s = divmod(int(seconds), 60)
     h, m = divmod(m, 60)
     return "剩余%02d时%02d分%02d秒" % (h, m, s)
 
+
 async def get_avater_pic(avater_url):
-    res = await (await aiorequests.get(avater_url)).content
+    # res = await (await aiorequests.get(avater_url)).content
+    async with aiohttp.ClientSession() as session:
+        async with session.get(avater_url) as resp:
+            res = await resp.read()
     avater = Image.open(BytesIO(res)).convert("RGBA").resize((60, 60))
     return avater
 
-bg_card_color = {'1':'#C3B8A4','2':'#C3B8A4','3':'#4C74A7','4':'#D7B599'}
+
+bg_card_color = {'1': '#C3B8A4', '2': '#C3B8A4', '3': '#4C74A7', '4': '#D7B599'}
+
 
 async def draw_daily_note_card(data, uid):
     if not data:
@@ -41,9 +49,9 @@ async def draw_daily_note_card(data, uid):
     task = Image.open(os.path.join(res_path, 'daily_note', '委托.png')).convert("RGBA")
     power = Image.open(os.path.join(res_path, 'daily_note', '树脂.png')).convert("RGBA")
     money = Image.open(os.path.join(res_path, 'daily_note', '洞天宝钱.png')).convert("RGBA")
-    send_icon = Image.open(os.path.join(res_path, 'daily_note', '派遣背景.png')).convert("RGBA").resize((110,55))
-    send_finish_icon = Image.open(os.path.join(res_path, 'daily_note', '派遣完成.png')).convert("RGBA").resize((55,55))
-    abyss = Image.open(os.path.join(res_path,'daily_note','深渊.png')).convert('RGBA').resize((160,160))
+    send_icon = Image.open(os.path.join(res_path, 'daily_note', '派遣背景.png')).convert("RGBA").resize((110, 55))
+    send_finish_icon = Image.open(os.path.join(res_path, 'daily_note', '派遣完成.png')).convert("RGBA").resize((55, 55))
+    abyss = Image.open(os.path.join(res_path, 'daily_note', '深渊.png')).convert('RGBA').resize((160, 160))
     tran = Image.open(os.path.join(res_path, 'daily_note', '参量.png')).convert('RGBA').resize((40, 40))
     bg_draw = ImageDraw.Draw(bg_img)
 
@@ -99,14 +107,15 @@ async def draw_daily_note_card(data, uid):
         if data['transformer']['recovery_time']['reached']:
             bg_draw.text((415, 297), '已可用', font=get_font(30), fill=bg_color[1])
         else:
-            bg_draw.text((413, 298), f"{data['transformer']['recovery_time']['Day']}天后", font=get_font(25), fill=bg_color[1])
+            bg_draw.text((413, 298), f"{data['transformer']['recovery_time']['Day']}天后", font=get_font(25),
+                         fill=bg_color[1])
     # 深渊
     abyss_new_month = datetime.datetime.now().month if datetime.datetime.now().day < 16 else datetime.datetime.now().month + 1
     abyss_new_day = 16 if datetime.datetime.now().day < 16 else 1
     abyss_new = datetime.datetime.strptime('2022.' + str(abyss_new_month) + '.' + str(abyss_new_day) + '.04:00',
                                            '%Y.%m.%d.%H:%M') - datetime.datetime.now()
-    abyss_new_str = f'{abyss_new.days+1}天后刷新' if abyss_new.days <= 8 else '已刷新'
-    bg_img.alpha_composite(abyss,(520,264))
+    abyss_new_str = f'{abyss_new.days + 1}天后刷新' if abyss_new.days <= 8 else '已刷新'
+    bg_img.alpha_composite(abyss, (520, 264))
     bg_draw.text((568, 300), '深渊', font=get_font(30), fill=bg_color[1])
     if abyss_new_str == '已刷新':
         bg_draw.text((561, 350), abyss_new_str, font=get_font(25), fill=bg_color[1])
@@ -120,15 +129,15 @@ async def draw_daily_note_card(data, uid):
         for send in data['expeditions']:
             send_avatar = await get_avater_pic(send['avatar_side_icon'])
             send_status = '派遣已完成！' if send['status'] == 'Finished' else get_odd_time(send['remained_time'])
-            bg_draw.rectangle((145, h, 645, h+55), fill=None, outline=bg_color[1], width=3)
+            bg_draw.rectangle((145, h, 645, h + 55), fill=None, outline=bg_color[1], width=3)
             if send['status'] == 'Finished':
                 bg_img.alpha_composite(send_finish_icon, (590, h))
             bg_img.alpha_composite(send_icon, (150, h))
-            bg_img.alpha_composite(send_avatar, (150, h-10))
+            bg_img.alpha_composite(send_avatar, (150, h - 10))
             if send_status == '派遣已完成！':
-                bg_draw.text((329, h+10), send_status, font=get_font(25), fill=bg_color[1])
+                bg_draw.text((329, h + 10), send_status, font=get_font(25), fill=bg_color[1])
             else:
-                bg_draw.text((300, h+10), send_status, font=get_font(25), fill=bg_color[1])
+                bg_draw.text((300, h + 10), send_status, font=get_font(25), fill=bg_color[1])
             h += 57
         last_finish_second = int(max([s['remained_time'] for s in data['expeditions']]))
         if last_finish_second != 0:
@@ -138,9 +147,8 @@ async def draw_daily_note_card(data, uid):
             bg_draw.text((211, h + 3.5), last_finish_str, font=get_font(30), fill=bg_color[1])
         else:
             bg_draw.text((290, h + 3.5), '派遣已全部完成', font=get_font(30), fill=bg_color[1])
-    bg_draw.text((274, 797),'Created by 惜月の小派蒙',font=get_font(20), fill=bg_color[1])
+    bg_draw.text((274, 797), 'Created by 惜月の小派蒙', font=get_font(20), fill=bg_color[1])
 
     bg_img = pil2b64(bg_img, 70)
     bg_img = MessageSegment.image(bg_img)
     return bg_img
-

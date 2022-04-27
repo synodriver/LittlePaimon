@@ -1,9 +1,9 @@
 from hoshino import CanceledException, message_preprocessor, trigger
-from hoshino.typing import CQEvent
+from nonebot.adapters.onebot.v11 import Event
 
 
 @message_preprocessor
-async def handle_message(bot, event: CQEvent, _):
+async def handle_message(bot, event: Event, _):
 
     #if event.detail_type != 'group' and event.detail_type !='guild':
     #    pass

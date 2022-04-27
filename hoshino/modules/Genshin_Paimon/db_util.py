@@ -2,7 +2,7 @@ import sqlite3
 import json
 import os
 import re
-from hoshino import logger
+from nonebot import logger
 from datetime import datetime
 db_path = os.path.join(os.path.dirname(__file__), 'user_data', 'user_data.db')
 

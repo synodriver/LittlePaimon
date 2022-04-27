@@ -1,6 +1,7 @@
 import json
 from urllib import parse
-from hoshino import aiorequests
+import aiohttp
+
 
 def toApi(url):
     spliturl = str(url).split("?")
@@ -29,16 +30,18 @@ def getApi(url, gachaType, size, page, end_id=""):
 
 async def checkApi(url):
     try:
-        r = await aiorequests.get(url)
-        s = (await r.content).decode("utf-8")
-        j = json.loads(s)
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as r:
+                # r = await aiohttp.get(url)
+                s = (await r.read()).decode("utf-8")
+                j = json.loads(s)
     except Exception as e:
         # print("API请求解析出错：\n", traceback.format_exc())
         return f'API请求解析出错：{e}'
 
     if not j["data"]:
         if j["message"] == "authkey valid error":
-            #print("authkey错误")
+            # print("authkey错误")
             return "authkey错误，请重新获取链接给派蒙！"
         elif j["message"] == "authkey timeout":
             return "authkey已过期，请重新获取链接给派蒙！"
@@ -47,19 +50,22 @@ async def checkApi(url):
             return f'数据为空，错误代码：{j["message"]}'
     return 'OK'
 
+
 def getQueryVariable(variable):
-    query = str(url).split("?")[1]
+    query = str(url).split("?")[1]  # fixme
     vars = query.split("&")
     for v in vars:
         if v.split("=")[0] == variable:
             return v.split("=")[1]
     return ""
 
-def getGachaInfo():
+
+async def getGachaInfo():
     region = getQueryVariable("region")
     lang = getQueryVariable("lang")
     gachaInfoUrl = "https://webstatic.mihoyo.com/hk4e/gacha_info/{}/items/{}.json".format(region, lang)
-    r = requests.get(gachaInfoUrl)
-    s = r.content.decode("utf-8")
-    gachaInfo = json.loads(s)
+    # r = requests.get(gachaInfoUrl)  # fixme
+    async with aiohttp.ClientSession() as session:
+        async with session.get(gachaInfoUrl) as r:
+            gachaInfo = await r.json()
     return gachaInfo

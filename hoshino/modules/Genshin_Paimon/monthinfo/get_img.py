@@ -4,7 +4,7 @@ import os
 import matplotlib.pyplot as plt
 from io import BytesIO
 from ..util import pil2b64
-from hoshino.typing import MessageSegment
+from nonebot.adapters.onebot.v11 import MessageSegment
 
 res_path = os.path.join(os.path.dirname(os.path.dirname(__file__)),'res')
 

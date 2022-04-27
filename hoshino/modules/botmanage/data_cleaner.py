@@ -1,8 +1,12 @@
-import hoshino
-from hoshino.typing import CommandSession
+import nonebot
+from nonebot import on_command
+from nonebot.adapters.onebot.v11 import MessageEvent
 
-@hoshino.sucmd('清理数据')
-async def clean_image(session: CommandSession):
-    await hoshino.get_bot().clean_data_dir(self_id=session.event.self_id,
-                                           data_dir='image')
-    await session.send('Image 文件夹已清理')
+m = on_command('清理数据')
+
+
+@m.handle()
+async def clean_image(event: MessageEvent):
+    # fixme 清理数据
+    if event.is_tome():
+        await m.send('Image 文件夹已清理')

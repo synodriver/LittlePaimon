@@ -12,7 +12,7 @@ from nonebot.message import CanceledException
 
 import hoshino
 from hoshino import log, priv, trigger
-from hoshino.typing import *
+from nonebot.adapters.onebot.v11 import *
 
 try:
     import ujson as json
@@ -158,7 +158,7 @@ class Service:
         return bool((group_id in self.enable_group) or (self.enable_on_default and group_id not in self.disable_group))
 
 
-    def _check_all(self, ev: CQEvent):
+    def _check_all(self, ev: Event):
         if ev.detail_type == 'private':
             return True
         else:
@@ -221,7 +221,7 @@ class Service:
             word = word[0]
         def deco(func) -> Callable:
             @wraps(func)
-            async def wrapper(bot: HoshinoBot, event: CQEvent):
+            async def wrapper(bot: HoshinoBot, event: Event):
                 if len(event.message) != 1 or event.message[0].data.get('text'):
                     self.logger.info(f'Message {event.message_id} is ignored by fullmatch condition.')
                     return
@@ -292,7 +292,7 @@ class Service:
         def deco(func) -> Callable:
             @wraps(func)
             async def wrapper(session):
-                #if session.ctx['message_type'] != 'group' or session.ctx['message_type']!='guild':
+                #if event.ctx['message_type'] != 'group' or event.ctx['message_type']!='guild':
                 #    return
                 if not self.check_enabled(session.ctx['group_id']):
                     self.logger.debug(
@@ -413,7 +413,7 @@ def sucmd(name, force_private=True, **kwargs) -> Callable:
             if session.event.user_id not in hoshino.config.SUPERUSERS:
                 return
             if force_private and session.event.detail_type != 'private':
-                await session.send('> This command should only be used in private session.')
+                await session.send('> This command should only be used in private event.')
                 return
             try:
                 return await func(session)

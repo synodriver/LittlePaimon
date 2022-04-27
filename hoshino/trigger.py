@@ -1,19 +1,20 @@
 import re
 from collections import defaultdict
+from typing import List
 
 import pygtrie
 import zhconv
 
 import nonebot
 from hoshino import util
-from hoshino.typing import CQEvent, List
+from nonebot.adapters.onebot.v11 import Event
 
 
 class BaseTrigger:
     def add(self, x, sf: "ServiceFunc"):
         raise NotImplementedError
 
-    def find_handler(self, event: CQEvent) -> List["ServiceFunc"]:
+    def find_handler(self, event: Event) -> List["ServiceFunc"]:
         raise NotImplementedError
 
 
@@ -35,7 +36,7 @@ class PrefixTrigger(BaseTrigger):
                 self.trie[prefix_cht] = [sf]
             nonebot.logger.debug(f"Succeed to add prefix trigger `{prefix}`")
 
-    def find_handler(self, event: CQEvent) -> List["ServiceFunc"]:
+    def find_handler(self, event: Event) -> List["ServiceFunc"]:
         first_msg_seg = event.message[0]
         if first_msg_seg.type != "text":
             return []
@@ -72,7 +73,7 @@ class SuffixTrigger(BaseTrigger):
                 self.trie[suffix_r_cht] = [sf]
             nonebot.logger.debug(f"Succeed to add suffix trigger `{suffix}`")
 
-    def find_handler(self, event: CQEvent) -> List["ServiceFunc"]:
+    def find_handler(self, event: Event) -> List["ServiceFunc"]:
         last_msg_seg = event.message[-1]
         if last_msg_seg.type != "text":
             return []
@@ -105,7 +106,7 @@ class KeywordTrigger(BaseTrigger):
             self.allkw[keyword] = [sf]
             nonebot.logger.debug(f"Succeed to add keyword trigger `{keyword}`")
 
-    def find_handler(self, event: CQEvent) -> List["ServiceFunc"]:
+    def find_handler(self, event: Event) -> List["ServiceFunc"]:
         ret = []
         for kw, sfs in self.allkw.items():
             for sf in sfs:
@@ -124,7 +125,7 @@ class RexTrigger(BaseTrigger):
         self.allrex[rex].append(sf)
         nonebot.logger.debug(f"Succeed to add rex trigger `{rex.pattern}`")
 
-    def find_handler(self, event: CQEvent) -> "ServiceFunc":
+    def find_handler(self, event: Event) -> "ServiceFunc":
         ret = []
         for rex, sfs in self.allrex.items():
             for sf in sfs:
@@ -137,12 +138,12 @@ class RexTrigger(BaseTrigger):
 
 
 class _PlainTextExtractor(BaseTrigger):
-    def find_handler(self, event: CQEvent):
+    def find_handler(self, event: Event):
         event.plain_text = event.message.extract_plain_text().strip()
         return []
 
 class _TextNormalizer(_PlainTextExtractor):
-    def find_handler(self, event: CQEvent):
+    def find_handler(self, event: Event):
         super().find_handler(event)
         event.norm_text = util.normalize_str(event.plain_text)
         return []

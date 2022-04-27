@@ -2,7 +2,7 @@ from PIL import Image, ImageDraw, ImageFont
 import os
 from ..util import pil2b64
 from ..character_alias import get_short_name
-from hoshino.typing import MessageSegment
+from nonebot.adapters.onebot.v11 import MessageSegment
 
 res_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'res')
 

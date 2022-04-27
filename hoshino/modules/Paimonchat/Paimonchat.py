@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import nonebot
 from nonebot.adapters.onebot.v11 import Bot, MessageEvent, MessageSegment, GroupMessageEvent
 from nonebot import logger, MatcherGroup
 from nonebot.exception import ActionFailed
@@ -13,7 +14,7 @@ lmt = PriFreqLimiter(30)
 
 # sv = hoshino.Service('派蒙聊天')
 sv = MatcherGroup()
-
+logger = nonebot.logger
 res_dir = path.join(path.dirname(__file__), 'res')
 
 # 不进行复读的关键词
@@ -78,8 +79,8 @@ async def random_repeater(bot: Bot, event: MessageEvent):
                     group_stat[gid] = (msg, True, 0)
                     await bot.send(event, filt_message(event.message))
                 except ActionFailed as e:
-                    hoshino.logger.error(f'复读失败: {type(e)}')
-                    hoshino.logger.exception(e)
+                    logger.error(f'复读失败: {type(e)}')
+                    logger.exception(e)
             else:  # 概率测试失败，蓄力
                 p = 1 - (1 - p) / PROB_A
                 group_stat[gid] = (msg, False, p)
@@ -211,4 +212,4 @@ async def paimonchat(bot: Bot, event: MessageEvent):
             await bot.send(event, reply)
             lmt.start_cd(gid, word, word_config[word][0])  # 开始冷却
         except:
-            hoshino.logger.error('派蒙聊天语音发送失败，请检查是否已安装ffmpeg')
+            logger.error('派蒙聊天语音发送失败，请检查是否已安装ffmpeg')

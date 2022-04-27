@@ -1,15 +1,19 @@
 import os, random, re
+
+import aiohttp
 from PIL import Image, ImageDraw, ImageFont
 from ..util import pil2b64
-from hoshino.typing import MessageSegment
-from hoshino import logger, aiorequests
+from nonebot.adapters.onebot.v11 import MessageSegment
+from nonebot import logger
 from io import BytesIO
 import copy
 
 res_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'res')
 
+
 def get_font(size):
-    return ImageFont.truetype(os.path.join(res_path,'msyh.ttc'), size)
+    return ImageFont.truetype(os.path.join(res_path, 'msyh.ttc'), size)
+
 
 def get_expl_per(percentage):
     if percentage < 10:
@@ -21,6 +25,7 @@ def get_expl_per(percentage):
         p.insert(-1, '.')
         return ''.join(p) + '%'
 
+
 async def get_chara_card(data):
     chara_card = Image.new("RGBA", (226, 313), (255, 255, 255, 255))
     chara_img = Image.open(os.path.join(res_path, 'role_card', f'{data["id"]}.png'))
@@ -29,7 +34,8 @@ async def get_chara_card(data):
     chara_card.alpha_composite(b, (0, 236))
     # 命座
     if data['name'] != '埃洛伊':
-        actived_constellation_num = Image.open(os.path.join(res_path, 'player_card', f'命之座{data["actived_constellation_num"]}.png'))
+        actived_constellation_num = Image.open(
+            os.path.join(res_path, 'player_card', f'命之座{data["actived_constellation_num"]}.png'))
         chara_card.alpha_composite(actived_constellation_num, (155, 0))
     # 好感度
     if data['name'] != '旅行者':
@@ -41,7 +47,10 @@ async def get_chara_card(data):
     # 武器图标
     weapon_name = data['weapon']['icon'].split('/')[-1]
     if not os.path.exists(os.path.join(res_path, 'weapon', weapon_name)):
-        weapon_icon = await (await aiorequests.get(data['weapon']['icon'])).content
+        async with aiohttp.ClientSession() as session:
+            async with session.get(data['weapon']['icon']) as resp:
+                weapon_icon = await resp.read()
+        # weapon_icon = await (await aiorequests.get(data['weapon']['icon'])).content
         weapon_icon = Image.open(BytesIO(weapon_icon)).convert("RGBA")
         weapon_icon.save(os.path.join(res_path, 'weapon', weapon_name))
     weapon_icon = Image.open(os.path.join(res_path, 'weapon', weapon_name)).resize((63, 63))
@@ -49,11 +58,14 @@ async def get_chara_card(data):
     # 等级信息
     chara_draw = ImageDraw.Draw(chara_card)
     chara_draw.text((114, 225), f'Lv.{data["level"]}', font=get_font(25), fill='black')
-    chara_draw.text((143 - 12 * len(data["weapon"]["name"]), 250), f'{data["weapon"]["name"]}', font=get_font(25), fill='black')
-    chara_draw.text((93, 280), f'Lv.{data["weapon"]["level"]} 精炼{data["weapon"]["affix_level"]}', font=get_font(20), fill='black')
+    chara_draw.text((143 - 12 * len(data["weapon"]["name"]), 250), f'{data["weapon"]["name"]}', font=get_font(25),
+                    fill='black')
+    chara_draw.text((93, 280), f'Lv.{data["weapon"]["level"]} 精炼{data["weapon"]["affix_level"]}', font=get_font(20),
+                    fill='black')
     return chara_card
 
-async def draw_stats_data(bg_draw,stats):
+
+async def draw_stats_data(bg_draw, stats):
     # 第一行
     bg_draw.text((203 - 10 * len(str(stats['active_day_number'])), 475), str(stats['active_day_number']),
                  font=get_font(30), fill='black')
@@ -83,7 +95,8 @@ async def draw_stats_data(bg_draw,stats):
     bg_draw.text((774 - 10 * len(str(stats['magic_chest_number'])), 663), str(stats['magic_chest_number']),
                  font=get_font(30), fill='black')
 
-async def draw_homes_data(bg_draw,homes):
+
+async def draw_homes_data(bg_draw, homes):
     bg_draw.text((162 - 10 * len(str(homes['level'])), 1167), str(homes['level']),
                  font=get_font(30), fill='black')
     bg_draw.text((374 - 10 * len(str(homes['comfort_num'])), 1167), str(homes['comfort_num']),
@@ -93,7 +106,8 @@ async def draw_homes_data(bg_draw,homes):
     bg_draw.text((787 - 10 * len(str(homes['visit_num'])), 1167), str(homes['visit_num']),
                  font=get_font(30), fill='black')
 
-async def draw_world_data(bg_draw,data):
+
+async def draw_world_data(bg_draw, data):
     # 世界探索
     noneExp = {'level': 0, 'exploration_percentage': 0, 'offerings': [{'level': 0}]}
     for d in data['world_explorations']:
@@ -174,6 +188,7 @@ async def draw_world_data(bg_draw,data):
                  'Lv.' + str(ChasmsMawL['offerings'][0]['level']),
                  font=get_font(30), fill='white')
 
+
 async def draw_player_card(data, chara_data, uid, nickname="旅行者"):
     if not data:
         return '数据出错'
@@ -188,36 +203,38 @@ async def draw_player_card(data, chara_data, uid, nickname="旅行者"):
     bg_draw = ImageDraw.Draw(bg_img)
     # 头部名片
     name_id = random.choice(data['avatars'][0:8])['id']
-    name_card = Image.open(os.path.join(res_path, 'name_card', f'{name_id}.png')).crop((0, 40, 840, 360)).resize((846, 322))
+    name_card = Image.open(os.path.join(res_path, 'name_card', f'{name_id}.png')).crop((0, 40, 840, 360)).resize(
+        (846, 322))
     avatar = Image.open(os.path.join(res_path, 'role_profile', f'{name_id}.png')).resize((240, 240))
     bg_img.alpha_composite(name_card, (57, 27))
     bg_img.alpha_composite(avatar, (360, 25))
     uid_bg = Image.open(os.path.join(res_path, 'player_card', 'UID_bg.png')).resize((280, 100))
     bg_img.alpha_composite(uid_bg, (340, 247))
     bg_draw.text((354, 259), f'昵称 {nickname}', font=get_font(30), fill='white')
-    bg_draw.text((354, 291),f'UID {uid}', font=get_font(30), fill='white')
+    bg_draw.text((354, 291), f'UID {uid}', font=get_font(30), fill='white')
     # 数据总览
     stats = data['stats']
     await draw_stats_data(bg_draw, stats)
     # 尘歌壶
     h_lock = Image.open(os.path.join(res_path, 'player_card', '未解锁.png'))
-    homes_list = {'罗浮洞': {'unlock':False, 'posi': (79,852)}, '清琼岛': {'unlock':False, 'posi': (79,1000)}, '翠黛峰': {'unlock':False, 'posi': (489,852)}, '绘绮庭': {'unlock':False, 'posi': (489,1000)}}
+    homes_list = {'罗浮洞': {'unlock': False, 'posi': (79, 852)}, '清琼岛': {'unlock': False, 'posi': (79, 1000)},
+                  '翠黛峰': {'unlock': False, 'posi': (489, 852)}, '绘绮庭': {'unlock': False, 'posi': (489, 1000)}}
     if data['homes']:
         for hl in homes_list.items():
             for h in data['homes']:
                 if hl[0] in h.values():
-                    h_img = Image.open(os.path.join(res_path, 'player_card',f'{hl[0]}.png'))
+                    h_img = Image.open(os.path.join(res_path, 'player_card', f'{hl[0]}.png'))
                     bg_img.alpha_composite(h_img, hl[1]['posi'])
                     homes_list[hl[0]]['unlock'] = True
         for hl in homes_list.items():
             if not hl[1]['unlock']:
-                bg_img.alpha_composite(h_lock,hl[1]['posi'])
+                bg_img.alpha_composite(h_lock, hl[1]['posi'])
         homes = data['homes'][0]
     else:
         homes = {'level': '无数据', 'visit_num': '无数据', 'comfort_num': '无数据', 'item_num': '无数据'}
-    await draw_homes_data(bg_draw,homes)
+    await draw_homes_data(bg_draw, homes)
     # 世界探索
-    await draw_world_data(bg_draw,data)
+    await draw_world_data(bg_draw, data)
     # 角色
     nocha = ''
     if chara_data['data']:
@@ -262,21 +279,26 @@ async def get_chara_card_long(data):
     # 武器图标
     weapon_name = data['weapon']['icon'].split('/')[-1]
     if not os.path.exists(os.path.join(res_path, 'weapon', weapon_name)):
-        weapon_icon = await (await aiorequests.get(data['weapon']['icon'])).content
+        # weapon_icon = await (await aiorequests.get(data['weapon']['icon'])).content
+        async with aiohttp.ClientSession() as session:
+            async with session.get(data['weapon']['icon']) as resp:
+                weapon_icon = await resp.read()
         weapon_icon = Image.open(BytesIO(weapon_icon)).convert("RGBA")
         weapon_icon.save(os.path.join(res_path, 'weapon', weapon_name))
     weapon_icon = Image.open(os.path.join(res_path, 'weapon', weapon_name)).resize((62, 62))
     chara_card.alpha_composite(weapon_icon, (3, 291))
     # 等级信息
     chara_draw = ImageDraw.Draw(chara_card)
-    chara_draw.text((90-10*len(str(data["level"])), 230), f'Lv.{data["level"]}', font=get_font(35), fill='black')
+    chara_draw.text((90 - 10 * len(str(data["level"])), 230), f'Lv.{data["level"]}', font=get_font(35), fill='black')
     chara_draw.text((143 - 12 * len(data["weapon"]["name"]), 283), f'{data["weapon"]["name"]}', font=get_font(25),
                     fill='black')
-    chara_draw.text((135 - 10*len(str(data["weapon"]["level"])), 312), f'Lv.{data["weapon"]["level"]}', font=get_font(22),
+    chara_draw.text((135 - 10 * len(str(data["weapon"]["level"])), 312), f'Lv.{data["weapon"]["level"]}',
+                    font=get_font(22),
                     fill='black')
     chara_draw.text((114, 336), f'精炼{data["weapon"]["affix_level"]}', font=get_font(22),
                     fill='#BB9D7C')
     return chara_card
+
 
 async def draw_all_chara_card(data, uid):
     if not data:
@@ -297,37 +319,43 @@ async def draw_all_chara_card(data, uid):
             chara['rarity'] = 4.5
         if chara['name'] == '埃洛伊':
             chara['rarity'] = 4.5
-    chara_list = sorted(data, key=lambda i: (i['rarity'], i['actived_constellation_num'], i['level'],i['fetter'],i['weapon']['rarity']), reverse=True)
+    chara_list = sorted(data, key=lambda i: (
+    i['rarity'], i['actived_constellation_num'], i['level'], i['fetter'], i['weapon']['rarity']), reverse=True)
     bg_top = Image.open(os.path.join(res_path, 'player_card', '卡片顶部.png'))
     avatar = Image.open(os.path.join(res_path, 'role_profile', f'{chara_list[0]["id"]}.png')).resize((220, 220))
-    bg_top.alpha_composite(avatar,(542,30))
+    bg_top.alpha_composite(avatar, (542, 30))
     draw = ImageDraw.Draw(bg_top)
-    draw.text((538, 235),f'UID {uid}',font=get_font(30),fill='black')
+    draw.text((538, 235), f'UID {uid}', font=get_font(30), fill='black')
 
-    bg_middle = Image.open(os.path.join(res_path, 'player_card', '卡片身体.png')).resize((1304,474))
+    bg_middle = Image.open(os.path.join(res_path, 'player_card', '卡片身体.png')).resize((1304, 474))
     bg_bottom = Image.open(os.path.join(res_path, 'player_card', '卡片底部.png'))
-    bg_img = Image.new('RGBA',(1304,382+col*424+(col-1)*50+87),(0,0,0,0))
-    bg_img.paste(bg_top, (0,0))
+    bg_img = Image.new('RGBA', (1304, 382 + col * 424 + (col - 1) * 50 + 87), (0, 0, 0, 0))
+    bg_img.paste(bg_top, (0, 0))
     for i in range(0, col):
         bg_img.paste(bg_middle, (0, 382 + i * 474))
     n = 0
     for chara in chara_list:
-        chara_card = (await get_chara_card_long(chara)).resize((251,424))
-        bg_img.alpha_composite(chara_card, (75+301*(n%4), 390+474*int(n/4)))
+        chara_card = (await get_chara_card_long(chara)).resize((251, 424))
+        bg_img.alpha_composite(chara_card, (75 + 301 * (n % 4), 390 + 474 * int(n / 4)))
         n += 1
-    bg_img.paste(bg_bottom,(0,382+col*474-50))
+    bg_img.paste(bg_bottom, (0, 382 + col * 474 - 50))
 
     bg_img = pil2b64(bg_img, 55)
     bg_img = MessageSegment.image(bg_img)
     return bg_img
 
+
 # ysc
 shadow = Image.open(os.path.join(res_path, 'other', 'shadow.png'))
+
 
 async def draw_reli_icon(data):
     base_icon = Image.open(os.path.join(res_path, 'other', f'star{data["rarity"]}.png')).resize((80, 80))
     if not os.path.exists(os.path.join(res_path, 'reliquaries', f'{data["id"]}.png')):
-        icon = await (await aiorequests.get(data["icon"])).content
+        # icon = await (await aiorequests.get(data["icon"])).content
+        async with aiohttp.ClientSession() as session:
+            async with session.get(data['icon']) as resp:
+                icon = await resp.read()
         icon = Image.open(BytesIO(icon)).convert("RGBA").resize((80, 80))
         icon.save(os.path.join(res_path, 'reliquaries', f'{data["id"]}.png'))
     else:
@@ -338,10 +366,14 @@ async def draw_reli_icon(data):
     base_icon_draw.text((43, 59), f'+{data["level"]}', font=get_font(16), fill="white")
     return base_icon
 
+
 async def draw_const_skill_icon(data, name):
     base_icon = Image.open(os.path.join(res_path, 'other', '命座.png')).resize((65, 65))
     if not os.path.exists(os.path.join(res_path, 'skill_constellations', f'{name}{data["id"]}.png')):
-        icon = await (await aiorequests.get(data["icon"])).content
+        # icon = await (await aiorequests.get(data["icon"])).content
+        async with aiohttp.ClientSession() as session:
+            async with session.get(data['icon']) as resp:
+                icon = await resp.read()
         icon = Image.open(BytesIO(icon)).convert("RGBA").resize((65, 65))
         icon.save(os.path.join(res_path, 'reliquaries', f'{name}{data["id"]}.png'))
     else:
@@ -351,6 +383,7 @@ async def draw_const_skill_icon(data, name):
         unlock_icon = Image.open(os.path.join(res_path, 'other', '命座未解锁.png')).resize((65, 65))
         base_icon.alpha_composite(unlock_icon, (0, 0))
     return base_icon
+
 
 async def draw_line(p):
     img = Image.new('RGBA', (1000, 80), (255, 255, 255, 0))
@@ -363,11 +396,12 @@ async def draw_line(p):
     elif p > 1:
         p = 1
     w = 800 * p
-    draw.ellipse((w + 40 - 8, 80/6, w + 80 - 8, 80/6*5), fill='#CE9B51')
+    draw.ellipse((w + 40 - 8, 80 / 6, w + 80 - 8, 80 / 6 * 5), fill='#CE9B51')
     draw.ellipse((8, 80 / 6, 40 + 8, 80 / 6 * 5), fill='#CE9B51')
     draw.rectangle((20 + 8, 80 / 6, w + 60 - 8, 80 / 6 * 5), fill='#CE9B51')
     img = img.resize((250, 20), Image.ANTIALIAS)
     return img
+
 
 async def draw_chara_card(data, skill_data, chara_name, uid):
     if not data:
@@ -396,8 +430,8 @@ async def draw_chara_card(data, skill_data, chara_name, uid):
         chara_img = Image.open(os.path.join(res_path, 'role_splash', '空.png')).convert('RGBA')
     else:
         chara_img = Image.open(os.path.join(res_path, 'role_splash', f'{character["name"]}.png')).convert('RGBA')
-    W,H = chara_img.size
-    chara_img = chara_img.resize((int(W*400/H), 400))
+    W, H = chara_img.size
+    chara_img = chara_img.resize((int(W * 400 / H), 400))
     bg_img.alpha_composite(chara_img, (0, 0))
 
     # 名称 UID 等级 亲密度
@@ -422,7 +456,8 @@ async def draw_chara_card(data, skill_data, chara_name, uid):
     bg_img.alpha_composite(weapon_icon, (293, 175))
     bg_img.alpha_composite(shadow.resize((50, 25)), (344, 250))
     bg_draw.text((348, 250), f'Lv.{character["weapon"]["level"]}', font=get_font(18), fill='white')
-    weapon_star = Image.open(os.path.join(res_path, 'player_card', f'命之座{character["weapon"]["affix_level"]}.png')).resize((40, 40))
+    weapon_star = Image.open(
+        os.path.join(res_path, 'player_card', f'命之座{character["weapon"]["affix_level"]}.png')).resize((40, 40))
     bg_img.alpha_composite(weapon_star, (353, 175))
 
     # 圣遗物
@@ -434,7 +469,7 @@ async def draw_chara_card(data, skill_data, chara_name, uid):
         i += 1
 
     if not skill_data:
-        skill_data_ = {'retcode' : 'error'}
+        skill_data_ = {'retcode': 'error'}
     else:
         skill_data_ = copy.deepcopy(skill_data)
 
@@ -462,8 +497,9 @@ async def draw_chara_card(data, skill_data, chara_name, uid):
         for skill in skill_data_t[0:2]:
             skill_icon = await draw_const_skill_icon(skill, character['name'])
             bg_img.alpha_composite(skill_icon, skill_p[i])
-            bg_img.alpha_composite(shadow.resize((50, 25)), (skill_p[i][0]+69, skill_p[i][1]+22))
-            bg_draw.text((skill_p[i][0]+73+(6 if skill["level_current"] < 10 else 0),skill_p[i][1]+22), f'Lv.{skill["level_current"]}', font=get_font(18), fill='white')
+            bg_img.alpha_composite(shadow.resize((50, 25)), (skill_p[i][0] + 69, skill_p[i][1] + 22))
+            bg_draw.text((skill_p[i][0] + 73 + (6 if skill["level_current"] < 10 else 0), skill_p[i][1] + 22),
+                         f'Lv.{skill["level_current"]}', font=get_font(18), fill='white')
             i += 1
         # 绫华和莫娜特别
         if character['name'] == '神里绫华' or character['name'] == '莫娜':
@@ -472,8 +508,9 @@ async def draw_chara_card(data, skill_data, chara_name, uid):
             skill = skill_data_t[2]
         skill_icon = await draw_const_skill_icon(skill, character['name'])
         bg_img.alpha_composite(skill_icon, skill_p[i])
-        bg_img.alpha_composite(shadow.resize((50, 25)), (skill_p[i][0]+69, skill_p[i][1]+22))
-        bg_draw.text((skill_p[i][0]+73+(6 if skill["level_current"] < 10 else 0),skill_p[i][1]+22), f'Lv.{skill["level_current"]}', font=get_font(18), fill='white')
+        bg_img.alpha_composite(shadow.resize((50, 25)), (skill_p[i][0] + 69, skill_p[i][1] + 22))
+        bg_draw.text((skill_p[i][0] + 73 + (6 if skill["level_current"] < 10 else 0), skill_p[i][1] + 22),
+                     f'Lv.{skill["level_current"]}', font=get_font(18), fill='white')
     # 命座
     i = 0
     if skill_data_['retcode'] == 0:
@@ -484,7 +521,7 @@ async def draw_chara_card(data, skill_data, chara_name, uid):
         const_icon = await draw_const_skill_icon(const, character['name'])
         bg_img.alpha_composite(const_icon, const_p[i])
         i += 1
-    
+
     bg_draw.text((330, 371), 'Created by 惜月の小派蒙', font=get_font(20), fill='white')
     bg_img = pil2b64(bg_img, 70)
     bg_img = MessageSegment.image(bg_img)

@@ -5,7 +5,9 @@ import re
 import random
 import time
 import string
-from hoshino import logger, aiorequests
+
+import aiohttp
+from nonebot import logger
 from io import BytesIO
 import base64
 import datetime
@@ -238,8 +240,10 @@ async def check_cookie(cookie):
         'x-rpc-client_type': '5',
         'Referer': 'https://webstatic.mihoyo.com/'
     }
-    res = await aiorequests.get(url=url, headers=headers)
-    res = await res.json()
+    # res = await aiorequests.get(url=url, headers=headers)
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers=headers) as resp:
+            res = await resp.json()
     if res['retcode'] != 0:
         return False
     else:

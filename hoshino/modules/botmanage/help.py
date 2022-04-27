@@ -1,9 +1,13 @@
+from io import StringIO
+
 import nonebot
 
 from hoshino import __version__
 from nonebot.adapters.onebot.v11 import MessageEvent, Bot
-from nonebot import on_startswith
+from nonebot import on_startswith, MatcherGroup
+
 # sv = Service('_help_', manage_priv=priv.SUPERUSER, visible=False)
+sv = MatcherGroup()
 
 TOP_MANUAL = f'''
 ====================
@@ -25,9 +29,11 @@ TOP_MANUAL = f'''
 发送[#帮助派蒙]获取更详细的指令
 =====================
 '''.strip()
-#[#喜加一资讯 n]查看n条喜加一资讯
 
-def gen_service_manual(service: Service, gid: int):
+
+# [#喜加一资讯 n]查看n条喜加一资讯
+
+def gen_service_manual(service: "Service", gid: int):
     spit_line = '=' * max(0, 18 - len(service.name))
     manual = [f"|{'○' if service.check_enabled(gid) else '×'}| {service.name} {spit_line}"]
     if service.help:
@@ -35,28 +41,29 @@ def gen_service_manual(service: Service, gid: int):
     return '\n'.join(manual)
 
 
-def gen_bundle_manual(bundle_name, service_list, gid):
-    manual = [bundle_name]
-    service_list = sorted(service_list, key=lambda s: s.name)
-    for s in service_list:
-        if s.visible:
-            manual.append(gen_service_manual(s, gid))
-    return '\n'.join(manual)
+def gen_bundle_manual(name: str, plugin: nonebot.plugin.Plugin) -> str:
+    manual = StringIO()
+    manual.write(name)
+    if doc := plugin.module.__doc__:
+        manual.write("\n" + doc)
+    return manual.getvalue()
 
 
-M = on_startswith('#帮助')
+matcher1 = sv.on_startswith('#帮助')
+
+
+@matcher1.handle()
 async def send_help(bot: Bot, event: MessageEvent):
-    gid = event.group_id
     arg = event.message.extract_plain_text().strip()
-    bundles = nonebot.get_loaded_plugins()
-    services = Service.get_loaded_services()
+    plugins = nonebot.get_loaded_plugins()
+    # services = Service.get_loaded_services()
     if not arg:
         await bot.send(event, TOP_MANUAL)
-    elif arg in bundles:
-        msg = gen_bundle_manual(arg, bundles[arg], gid)
+    elif arg in map(lambda p: p.name, plugins):
+        msg = gen_bundle_manual(arg, nonebot.get_plugin(arg))
         await bot.send(event, msg)
-    elif arg in services:
-        s = services[arg]
-        msg = gen_service_manual(s, gid)
-        await bot.send(event, msg)
+    # elif arg in services:
+    #     s = services[arg]
+    #     msg = gen_service_manual(s, gid)
+    #     await bot.send(event, msg)
     # else: ignore
