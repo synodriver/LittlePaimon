@@ -17,7 +17,7 @@ help_msg = '''
 # sv = Service('派蒙绑定', visible=False, enable_on_default=True, bundle='派蒙', help_=help_msg)
 sv = MatcherGroup()
 
-cookie_error_msg = '这个cookie无效哦，请旅行者确认是否正确\n1.ck要登录mys帐号后获取\n2.获取ck后不能退出登录\n3.ck至少要包含cookie_token和account_id两个参数\n4.建议在无痕模式下取'
+cookie_error_msg = '这个cookie无效哦，请旅行者确认是否正确\n1.ck要登录mys帐号后获取,且不能退出登录\n2.ck中要有cookie_token和account_id两个参数\n3.建议在无痕模式下取'
 
 matcher1 = sv.on_startswith(('原神绑定', 'ysb'))
 

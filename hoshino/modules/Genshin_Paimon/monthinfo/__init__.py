@@ -5,7 +5,7 @@ from json import JSONDecodeError
 from nonebot import logger, MatcherGroup
 from nonebot.adapters.onebot.v11 import Bot, MessageEvent, MessageSegment
 from nonebot.exception import ActionFailed
-from hoshino.util import filt_message
+
 from ..util import get_uid_in_msg
 from ..get_data import get_monthinfo_data
 from .get_img import draw_monthinfo_card

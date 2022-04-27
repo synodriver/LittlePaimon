@@ -3,7 +3,7 @@ from nonebot import logger, MatcherGroup, get_bot
 from nonebot.adapters.onebot.v11 import Bot, MessageEvent, MessageSegment, GroupMessageEvent
 
 from ..util import get_uid_in_msg
-from ..db_util import get_auto_sign, add_auto_sign, delete_auto_sign
+from ..db_util import get_auto_sign, add_auto_sign, delete_auto_sign, get_private_cookie
 from ..get_data import get_sign_info, sign, get_sign_list
 from ..config import auto_sign_time
 from datetime import datetime
@@ -58,6 +58,10 @@ async def bbs_auto_sign(bot: Bot, event: MessageEvent):
         find_action = re.search(r'(?P<action>开启|启用|打开|关闭|禁用)', msg)
         if find_action:
             if find_action.group('action') in ['开启', '启用', '打开']:
+                cookie = await get_private_cookie(uid, key='uid')
+                if not cookie:
+                    await bot.send(event, '你的该uid还没绑定cookie哦，先用ysb绑定吧!', at_sender=True)
+                    return
                 await add_auto_sign(str(event.user_id), uid, str(event.group_id))
                 await bot.send(event, '开启米游社自动签到成功,派蒙会在每日0点帮你签到', at_sender=True)
             elif find_action.group('action') in ['关闭', '禁用']:
