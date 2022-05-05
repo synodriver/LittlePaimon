@@ -14,7 +14,7 @@ config = nonebot.get_driver().config
 
 class ResObj:
     def __init__(self, res_path):
-        res_dir = os.path.expanduser(config.RES_DIR)   # fixme: 别在用户目录搞事啊 用os.getcwd吧
+        res_dir = config.RES_DIR  # fixme: 别在用户目录搞事啊 用os.getcwd吧
         fullpath = os.path.abspath(os.path.join(res_dir, res_path))
         if not fullpath.startswith(os.path.abspath(res_dir)):
             raise ValueError('Cannot access outside RESOUCE_DIR')
@@ -69,8 +69,10 @@ class ResRec(ResObj):
 def get(path, *paths):
     return ResObj(os.path.join(path, *paths))
 
+
 def img(path, *paths):
     return ResImg(os.path.join('img', path, *paths))
+
 
 def rec(path, *paths):
     return ResRec(os.path.join('record', path, *paths))

@@ -14,7 +14,7 @@ from nonebot.adapters.onebot.v11 import Event, Bot, Message, MessageSegment
 from nonebot.exception import ActionFailed
 
 logger = nonebot.logger
-bot = nonebot.get_bot()
+# bot = nonebot.get_bot()
 
 
 async def download_async(url: str, save_path: str, save_name: str, auto_extension=False) -> None:

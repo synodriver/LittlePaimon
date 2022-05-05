@@ -5,11 +5,15 @@ import nonebot
 # from nonebot import Message, MessageSegment, message_preprocessor
 #
 # HoshinoBot = nonebot.NoneBot
+import hoshino.modules.avatar_gif
+import hoshino.modules.dice
+import hoshino.modules.Genshin_Paimon
+import hoshino.modules.myb_exchange
 
 __version__ = 'v1.0.4'
-
+logger = nonebot.logger
 # _bot = None
-os.makedirs(os.path.expanduser('~/.hoshino'), exist_ok=True)
+# os.makedirs(os.path.expanduser('~/.hoshino'), exist_ok=True)
 # logger = log.new_logger('hoshino', config.DEBUG)
 
 # def init() -> HoshinoBot:

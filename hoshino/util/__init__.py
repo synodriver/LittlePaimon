@@ -9,6 +9,7 @@ from typing import Union
 
 import pytz
 import zhconv
+import nonebot
 from nonebot.exception import ActionFailed
 from nonebot.adapters.onebot.v11.utils import escape
 from nonebot.adapters.onebot.v11 import MessageEvent, Message
@@ -35,7 +36,7 @@ def load_config(inbuilt_file_var):
             config = json.load(f)
             return config
     except Exception as e:
-        hoshino.logger.exception(e)
+        nonebot.logger.exception(e)
         return {}
 
 
@@ -43,9 +44,9 @@ async def delete_msg(ev: MessageEvent):
     try:
         await hoshino.get_bot().delete_msg(self_id=ev.self_id, message_id=ev.message_id)
     except ActionFailed as e:
-        hoshino.logger.error(f'撤回失败: {e}')
+        nonebot.logger.error(f'撤回失败: {e}')
     except Exception as e:
-        hoshino.logger.exception(e)
+        nonebot.logger.exception(e)
 
 
 async def silence(ev: MessageEvent, ban_time, skip_su=True):
@@ -58,9 +59,9 @@ async def silence(ev: MessageEvent, ban_time, skip_su=True):
         if 'NOT_MANAGEABLE' in str(e):
             return
         else:
-            hoshino.logger.error(f'禁言失败 {e}')
+            nonebot.logger.error(f'禁言失败 {e}')
     except Exception as e:
-        hoshino.logger.exception(e)
+        nonebot.logger.exception(e)
 
 
 def pic2b64(pic: Image) -> str:

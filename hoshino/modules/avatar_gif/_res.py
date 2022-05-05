@@ -9,7 +9,7 @@ from filetype.filetype import guess_mime
 from PIL import Image
 from nonebot.adapters.onebot.v11 import MessageSegment
 
-from ._util import download_async, get_md5, get_random_file, logger, bot
+from ._util import download_async, get_md5, get_random_file, logger
 
 
 class Res:

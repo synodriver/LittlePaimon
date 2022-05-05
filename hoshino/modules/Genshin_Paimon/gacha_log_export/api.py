@@ -52,7 +52,7 @@ async def checkApi(url):
 
 
 def getQueryVariable(variable):
-    query = str(url).split("?")[1]  # fixme
+    query = str(variable).split("?")[1]  # fixme
     vars = query.split("&")
     for v in vars:
         if v.split("=")[0] == variable:

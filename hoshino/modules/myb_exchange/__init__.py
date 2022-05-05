@@ -183,9 +183,9 @@ async def choose_date(bot: Bot, event: MessageEvent):
     try:
         cookie, address, goods = myb_info[qid]['cookie'], myb_info[qid]['address_id'], myb_info[qid]['goods_id']
     except Exception as e:
-        del myb_info[info[0]]  # fixme
-        logger.error(f'{info[0]}的信息不全，已删除')
-        save_data()
+        # del myb_info[info[0]]  # fixme
+        # logger.error(f'{info[0]}的信息不全，已删除')
+        # save_data()
         return
     scheduler.add_job(
         exchange,
