@@ -23,10 +23,7 @@ async def main(bot: Bot, event: MessageEvent):
     if not uid:
         await bot.send(event, '请把正确的uid给派蒙哦,例如sy100123456!', at_sender=True)
         return
-    if not msg:
-        floor = []
-    else:
-        floor = msg.split(' ')
+    floor = msg.split(' ') if msg else []
     true_floor = []
     for f in floor:
         if f.isdigit() and (9 <= int(f) <= 12) and len(true_floor) < 2:

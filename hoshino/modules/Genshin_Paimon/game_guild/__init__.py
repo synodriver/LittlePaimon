@@ -122,21 +122,20 @@ async def daily_material(bot: Bot, event: MessageEvent):
     week = event.message.extract_plain_text().strip()
     if not week:
         return
-    find_week = re.search(r'(?P<week>今日|今天|现在|明天|明日|后天|后日|周一|周二|周三|周四|周五|周六|周日)', week)
-    if not find_week:
-        return
-    else:
-        if find_week.group('week') in ['今日', '今天', '现在']:
+    if find_week := re.search(
+        r'(?P<week>今日|今天|现在|明天|明日|后天|后日|周一|周二|周三|周四|周五|周六|周日)', week
+    ):
+        if find_week['week'] in ['今日', '今天', '现在']:
             week = time.strftime("%w")
-        elif find_week.group('week') in ['明日', '明天']:
+        elif find_week['week'] in ['明日', '明天']:
             week = str(int(time.strftime("%w")) + 1)
-        elif find_week.group('week') in ['后日', '后天']:
+        elif find_week['week'] in ['后日', '后天']:
             week = str(int(time.strftime("%w")) + 2)
-        elif find_week.group('week') in ['周一', '周四']:
+        elif find_week['week'] in ['周一', '周四']:
             week = '1'
-        elif find_week.group('week') in ['周二', '周五']:
+        elif find_week['week'] in ['周二', '周五']:
             week = '2'
-        elif find_week.group('week') in ['周三', '周六']:
+        elif find_week['week'] in ['周三', '周六']:
             week = '3'
         else:
             week = '0'
@@ -154,6 +153,9 @@ async def daily_material(bot: Bot, event: MessageEvent):
             await bot.send(event,
                            MessageSegment.image(file=Path(f'{os.path.join(res_path, "daily_material", "周三周六.jpg")}')),
                            at_sender=True)
+
+    else:
+        return
 
 
 matcher10 = sv.on_startswith("help")

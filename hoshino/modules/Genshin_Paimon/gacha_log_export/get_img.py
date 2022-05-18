@@ -30,8 +30,7 @@ async def sort_data(gacha_data):
     role_data = {'type': '角色', 'total_num': 0, '5_star': [], '4_star': [], '5_gacha': 0, '4_gacha': 0}
     weapon_data = {'type': '武器', 'total_num': 0, '5_star': [], '4_star': [], '5_gacha': 0, '4_gacha': 0}
     new_gacha_data = [sprog_data, permanent_data, role_data, weapon_data]
-    i = 0
-    for pool in gacha_data['gachaLog'].values():
+    for i, pool in enumerate(gacha_data['gachaLog'].values()):
         pool.reverse()
         new_gacha_data[i]['total_num'] = len(pool)
         for p in pool:
@@ -46,7 +45,6 @@ async def sort_data(gacha_data):
             else:
                 new_gacha_data[i]['5_gacha'] += 1
                 new_gacha_data[i]['4_gacha'] += 1
-        i += 1
     return new_gacha_data
 
 async def draw_gacha_log(data):
@@ -56,30 +54,55 @@ async def draw_gacha_log(data):
     mid = Image.open(os.path.join(res_path, 'player_card', '卡片身体.png')).resize((768, 80))
     bottom = Image.open(os.path.join(res_path, 'player_card', '卡片底部.png')).resize((768, 51))
     five_star = data['5_star']
-    col = int(len(five_star) / 6)
-    if not len(five_star) % 6 == 0:
+    col = len(five_star) // 6
+    if len(five_star) % 6 != 0:
         col += 1
     top_draw = ImageDraw.Draw(top)
     top_draw.text((348, 30), f'{data["type"]}池', font=get_font(24), fill='#F8F5F1')
     top_draw.text((145 - 6 * len(str(data["total_num"])), 88), f'{data["total_num"]}', font=get_font(24), fill='black')
-    five_ave = round(sum([x[1] for x in five_star]) / len(five_star), 1) if five_star else ' '
+    five_ave = (
+        round(sum(x[1] for x in five_star) / len(five_star), 1)
+        if five_star
+        else ' '
+    )
+
     top_draw.text((321 - 10 * len(str(five_ave)), 88), f'{five_ave}', font=get_font(24), fill='black' if five_ave != ' ' and five_ave > 60 else 'red')
     five_per = round(len(five_star) / (data['total_num'] - data['5_gacha']) * 100, 2) if five_star else -1
-    five_per_str = str(five_per) + '%' if five_per > -1 else ' '
+    five_per_str = f'{str(five_per)}%' if five_per > -1 else ' '
     top_draw.text((427, 88), f'{five_per_str}', font=get_font(24), fill='black' if five_per < 1.7 else 'red')
-    five_up = round(len([x[0] for x in five_star if not x[0] in ['刻晴', '迪卢克', '七七', '莫娜', '琴']]) / len(five_star) * 100,
-                        1) if five_star else -1
-    five_up_str = str(five_up) + '%' if five_per > -1 else ' '
+    five_up = (
+        round(
+            len(
+                [
+                    x[0]
+                    for x in five_star
+                    if x[0] not in ['刻晴', '迪卢克', '七七', '莫娜', '琴']
+                ]
+            )
+            / len(five_star)
+            * 100,
+            1,
+        )
+        if five_star
+        else -1
+    )
+
+    five_up_str = f'{str(five_up)}%' if five_per > -1 else ' '
     top_draw.text((578 if len(five_up_str) != 6 else 569, 88), f'{five_up_str}', font=get_font(24), fill='black' if five_up < 75 else 'red')
     most_five = sorted(five_star, key=lambda x: x[1], reverse=False)[0][0] if five_star else ' '
     top_draw.text((152 - 14 * len(most_five), 163), f'{most_five}', font=get_font(24), fill='red')
-    four_ave = round(sum([x[1] for x in data['4_star']]) / len(data['4_star']), 1) if data['4_star'] else ' '
+    four_ave = (
+        round(sum(x[1] for x in data['4_star']) / len(data['4_star']), 1)
+        if data['4_star']
+        else ' '
+    )
+
     top_draw.text((316 - 10 * len(str(four_ave)), 163), f'{four_ave}', font=get_font(24), fill='black' if four_ave != ' ' and four_ave > 7 else 'red')
     top_draw.text((461 - 6 * len(str(data['5_gacha'])), 163), f'{data["5_gacha"]}', font=get_font(24), fill='black')
     top_draw.text((604, 163), f'{data["4_gacha"]}', font=get_font(24), fill='black')
     bg_img = Image.new('RGBA', (768, 288 + col * 80 - (20 if col > 0 else 0) + 51), (0, 0, 0, 0))
     bg_img.paste(top, (0, 0))
-    for i in range(0, col):
+    for i in range(col):
         bg_img.paste(mid, (0, 288 + i * 80))
     bg_img.paste(bottom, (0, 288 + col * 80 - (20 if col > 0 else 0)))
     bg_draw = ImageDraw.Draw(bg_img)

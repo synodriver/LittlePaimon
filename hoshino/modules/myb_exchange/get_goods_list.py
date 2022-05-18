@@ -34,10 +34,7 @@ def get_goods_list():
             if res.json()['message'] != 'OK':
                 return None
             goods = res.json()['data']['list']
-            if goods:
-                #print(f'成功获取到{game}的商品')
-                pass
-            else:
+            if not goods:
                 break
             for good in goods:
                 goods_list[good['goods_name']] = good['goods_id']

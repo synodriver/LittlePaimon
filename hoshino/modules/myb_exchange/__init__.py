@@ -79,13 +79,10 @@ async def choose_cookie(bot: Bot, event: MessageEvent):
     elif not add_list:
         await bot.send(event, '该cookie账号下没有收货地址，请先去添加')
     else:
-        myb_info[qid] = {}
-        myb_info[qid]['cookie'] = cookie
+        myb_info[qid] = {'cookie': cookie}
         save_data()
         add_list_all[qid] = add_list
-        msg = ''
-        for add in add_list.items():
-            msg += f'id:{add[0]} {add[1]}\n'
+        msg = ''.join(f'id:{add[0]} {add[1]}\n' for add in add_list.items())
         await bot.send(event, '---2.请发送指令[myb地址 (地址id)]来选择收货地址，如 myb地址10---')
         await asyncio.sleep(1)
         await bot.send(event, msg)
@@ -125,10 +122,10 @@ async def choose_goods(bot: Bot, event: MessageEvent):
     if qid not in myb_info:
         myb_info[qid] = {}
     keyword = event.message.extract_plain_text().strip()
-    goods_list_match = {}
-    for good in goods_list.items():
-        if keyword in good[0]:
-            goods_list_match[good[0]] = good[1]
+    goods_list_match = {
+        good[0]: good[1] for good in goods_list.items() if keyword in good[0]
+    }
+
     msg = '找到的商品有：\n'
     for good in goods_list_match.items():
         msg += f'-名：{good[0]} id：{good[1]}-\n'
@@ -176,7 +173,7 @@ async def choose_date(bot: Bot, event: MessageEvent):
     try:
         datet = datetime.datetime.strptime(date, '%Y年%m月%d日%H:%M:%S')
     except Exception as e:
-        await bot.send(event, f'时间格式错误，正确格式：myb时间 2022年02月10日12:00:00')
+        await bot.send(event, '时间格式错误，正确格式：myb时间 2022年02月10日12:00:00')
         return
     myb_info[qid]['date'] = date
     save_data()
@@ -261,22 +258,23 @@ async def exchange(qid, cookie, address, goods):
 
 
 async def makeaction():
-    if myb_info:
-        for info in myb_info.items():
-            try:
-                date = datetime.datetime.strptime(info[1]['date'], '%Y年%m月%d日%H:%M:%S')
-                qid, cookie, address, goods = info[0], info[1]['cookie'], info[1]['address_id'], info[1]['goods_id']
-            except Exception as e:
-                del myb_info[info[0]]
-                save_data()
-                logger.error(f'{info[0]}的信息不全，已删除')
-                break
-            scheduler.add_job(
-                exchange,
-                'date',
-                args=(qid, cookie, address, goods),
-                run_date=date
-            )
+    if not myb_info:
+        return
+    for info in myb_info.items():
+        try:
+            date = datetime.datetime.strptime(info[1]['date'], '%Y年%m月%d日%H:%M:%S')
+            qid, cookie, address, goods = info[0], info[1]['cookie'], info[1]['address_id'], info[1]['goods_id']
+        except Exception as e:
+            del myb_info[info[0]]
+            save_data()
+            logger.error(f'{info[0]}的信息不全，已删除')
+            break
+        scheduler.add_job(
+            exchange,
+            'date',
+            args=(qid, cookie, address, goods),
+            run_date=date
+        )
 
 
 @scheduler.scheduled_job('date', run_date=datetime.datetime.now())

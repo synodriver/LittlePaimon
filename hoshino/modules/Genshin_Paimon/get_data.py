@@ -143,8 +143,8 @@ async def get_bind_game(cookie):
     finduid = re.search(r'account_id=(\d{6,12})', cookie)
     if not finduid:
         finduid = re.search(r'ltuid=(\d{6,12})', cookie)
-        if not finduid:
-            return None, None
+    if not finduid:
+        return None, None
     uid = finduid.group(1)
     url = 'https://api-takumi.mihoyo.com/game_record/card/wapi/getGameRecordCard'
     headers = get_headers(q=f'uid={uid}', cookie=cookie)

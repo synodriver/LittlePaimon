@@ -54,7 +54,4 @@ blue={
 }
 
 def get_blue_pic(name):
-    for c in blue.items():
-        if c[0] == name:
-            return c[1]
-    return None
+    return next((c[1] for c in blue.items() if c[0] == name), None)

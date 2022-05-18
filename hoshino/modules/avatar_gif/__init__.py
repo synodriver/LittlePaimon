@@ -37,24 +37,23 @@ async def main(bot: Bot, event: MessageEvent, state: T_State):
     else:
         rm = str(event.raw_message)
     if name == '':
-        match = re.search(r"\[CQ:at,qq=(.*)\]", rm)
-        if not match:
+        if match := re.search(r"\[CQ:at,qq=(.*)\]", rm):
+            if event.message_type == 'guild':
+                await bot.send(event, '频道无法用艾特噢', at_sender=True)
+                return
+            head = await get_avatar(match[1])
+            action = str(event.message).split('[CQ')[0].strip(' ')
+        else:
             match2 = re.search(r"\[CQ:image,file=(.*),url=(.*)\]", str(event.message))
             try:
                 action = rm.split('[CQ')[0].strip(' ')
                 async with aiohttp.ClientSession() as session:
-                    async with session.get(match2.group(2)) as resp:
+                    async with session.get(match2[2]) as resp:
                         resp_cont = await resp.read()
                 head = Image.open(BytesIO(resp_cont))
             except:
                 await bot.send(event, '指令出错，请艾特或接图片', at_sender=True)
                 return
-        else:
-            if event.message_type == 'guild':
-                await bot.send(event, '频道无法用艾特噢', at_sender=True)
-                return
-            head = await get_avatar(match.group(1))
-            action = str(event.message).split('[CQ')[0].strip(' ')
     elif name.isdigit():
         head = await get_avatar(name)
         action = rm.split(name)[0].strip(' ')
@@ -69,7 +68,7 @@ async def main(bot: Bot, event: MessageEvent, state: T_State):
         res = await kiss(data_dir, head, my_head)
     elif action == '#吃掉':
         res = await eat(data_dir, head)
-    elif action == '#摸摸' or action == '#rua':
+    elif action in ['#摸摸', '#rua']:
         res = await rua(data_dir, head)
     elif action == '#贴贴':
         my_head = await get_avatar(str(event.user_id))
@@ -90,10 +89,7 @@ async def main(bot: Bot, event: MessageEvent, state: T_State):
 
 
 async def check_poke(event: PokeNotifyEvent) -> bool:
-    if isinstance(event, PokeNotifyEvent):
-        return True if event.is_tome() else False
-    else:
-        return False
+    return bool(event.is_tome()) if isinstance(event, PokeNotifyEvent) else False
 
 
 matcher2 = sv.on_notice(rule=check_poke)
@@ -118,11 +114,10 @@ async def poke_back(event: PokeNotifyEvent):
                 my_head = await get_avatar(str(uid))
                 head = await get_avatar(str(tid))
                 res = await random.choice(data_source.avatarFunList1)(data_dir, head, my_head)
-                await matcher2.send(R.image(res))
             else:
                 head = await get_avatar(str(tid))
                 res = await random.choice(data_source.avatarFunList2)(data_dir, head)
-                await matcher2.send(R.image(res))
+            await matcher2.send(R.image(res))
         lmt.start_cd(gid, 20)
 
 
@@ -131,8 +126,7 @@ async def get_avatar(qq):
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:
             resp_cont = await resp.read()
-    avatar = Image.open(BytesIO(resp_cont)).convert("RGBA")
-    return avatar
+    return Image.open(BytesIO(resp_cont)).convert("RGBA")
 
 
 matcher3 = sv.on_startswith("help")

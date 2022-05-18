@@ -43,14 +43,11 @@ async def gacha(bot: Bot, event: MessageEvent, state: dict):
     sd = event.sender
     num = state["_matched_dict"].get('num', None)
     pool = state["_matched_dict"].get('pool', None)
-    if num:
-        if num.isdigit():
-            num = int(num)
-            if num > 5:
-                await bot.send(event, '最多只能同时5十连哦', at_sender=True)
-                return
-        else:
-            num = 1
+    if num and num.isdigit():
+        num = int(num)
+        if num > 5:
+            await bot.send(event, '最多只能同时5十连哦', at_sender=True)
+            return
     else:
         num = 1
     if not pool:
@@ -89,7 +86,7 @@ async def gacharecord(bot: Bot, event: MessageEvent):
         await bot.send(event, '你此前并没有抽过卡哦', at_sender=True)
         return
     msg: str = event.message.extract_plain_text().strip()
-    if msg == '角色' or msg == '武器':
+    if msg in {'角色', '武器'}:
         res = await getrwrecord(msg, uid)
     else:
         data = user_info[uid]['gacha_list']
@@ -139,16 +136,18 @@ async def getrwrecord(msg, uid):
                     res += '%s%s 数量: %s 出货: %s\n' % (role[1]['星级'], role[0], role[1]['数量'], role[1]['出货'])
                 else:
                     res += '%s%s 数量: %s\n' % (role[1]['星级'], role[0], role[1]['数量'])
+    elif len(user_info[uid]['weapon_list']):
+        res = '你所拥有的武器如下:\n'
+        for wp in user_info[uid]['weapon_list'].items():
+            res += (
+                '%s%s 数量: %s 出货: %s\n'
+                % (wp[1]['星级'], wp[0], wp[1]['数量'], wp[1]['出货'])
+                if len(wp[1]['星级']) == 5
+                else '%s%s 数量: %s\n' % (wp[1]['星级'], wp[0], wp[1]['数量'])
+            )
+
     else:
-        if not len(user_info[uid]['weapon_list']):
-            res = '你还没有武器'
-        else:
-            res = '你所拥有的武器如下:\n'
-            for wp in user_info[uid]['weapon_list'].items():
-                if len(wp[1]['星级']) == 5:
-                    res += '%s%s 数量: %s 出货: %s\n' % (wp[1]['星级'], wp[0], wp[1]['数量'], wp[1]['出货'])
-                else:
-                    res += '%s%s 数量: %s\n' % (wp[1]['星级'], wp[0], wp[1]['数量'])
+        res = '你还没有武器'
     res = res.replace('[', '')
     res = res.replace(']', '')
     res = res.replace(',', ' ')
@@ -181,13 +180,12 @@ async def choosedg(bot: Bot, event: MessageEvent):
     weapon_up_list = await getdg_weapon()
     if dg_weapon not in weapon_up_list:
         await bot.send(event, f'该武器无定轨，请输入全称[{weapon_up_list[0]}|{weapon_up_list[1]}]', at_sender=True)
+    elif dg_weapon == user_info[uid]['gacha_list']['dg_name']:
+        await bot.send(event, '你当前已经定轨该武器，无需更改')
     else:
-        if dg_weapon == user_info[uid]['gacha_list']['dg_name']:
-            await bot.send(event, '你当前已经定轨该武器，无需更改')
-        else:
-            user_info[uid]['gacha_list']['dg_name'] = dg_weapon
-            user_info[uid]['gacha_list']['dg_time'] = 0
-            await bot.send(event, f'定轨成功，定轨能量值已重置，当前定轨武器为：{dg_weapon}')
+        user_info[uid]['gacha_list']['dg_name'] = dg_weapon
+        user_info[uid]['gacha_list']['dg_time'] = 0
+        await bot.send(event, f'定轨成功，定轨能量值已重置，当前定轨武器为：{dg_weapon}')
     save_user_info()
 
 
@@ -225,15 +223,12 @@ async def deletedg(bot: Bot, event: MessageEvent):
 
 
 async def getdg_weapon():
-    weapon_up_list = []
     data = await gacha_info_list()
     f = lambda x: x.gacha_type == 302
     gacha_data = sorted(list(filter(f, data)), key=lambda x: x.end_time)[-1]
     gacha_id = gacha_data.gacha_id
     gacha_data = await gacha_info(gacha_id)
-    for weapon in gacha_data['r5_up_items']:
-        weapon_up_list.append(weapon['item_name'])
-    return weapon_up_list
+    return [weapon['item_name'] for weapon in gacha_data['r5_up_items']]
 
 
 def gacha_type_by_name(gacha_type):
@@ -277,5 +272,5 @@ async def gacha_info(gacha_id):
     async with aiohttp.ClientSession() as session:
         async with session.get(BASE_URL % gacha_id + '/zh-cn.json') as res:
             if res.status != 200:
-                raise Exception("error gacha_id: %s" % gacha_id)
+                raise Exception(f"error gacha_id: {gacha_id}")
             return await res.json(loads=partial(json.loads, object_hook=Dict))

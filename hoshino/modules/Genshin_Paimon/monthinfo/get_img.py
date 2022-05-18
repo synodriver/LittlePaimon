@@ -47,7 +47,7 @@ async def draw_circle(per, colors):
     for i in range(w):
         for j in range(h):
             pos = array[i, j]
-            isEdit = (sum([1 for x in pos[0:3] if x > 240]) == 3)
+            isEdit = sum(x > 240 for x in pos[:3]) == 3
             if isEdit:
                 array[i, j] = (255, 255, 255, 0)
     return pil_image.resize((378, 378))
@@ -108,7 +108,13 @@ async def draw_monthinfo_card(data):
         bg_draw.rectangle(((330, h), (340, h + 10)), fill=color[name])
         bg_draw.text((345, h - 6), name, font=get_font(17), fill='#27384C')
         bg_draw.text((430, h - 6), str(num_list[name_list.index(name)]), font=get_font(17), fill='#27384C')
-        bg_draw.text((480, h - 6), str(per_list[name_list.index(name)]) + '%', font=get_font(17), fill='#27384C')
+        bg_draw.text(
+            (480, h - 6),
+            f'{str(per_list[name_list.index(name)])}%',
+            font=get_font(17),
+            fill='#27384C',
+        )
+
         h += 40
     if data['month_data']['primogems_rate'] < 0:
         ysstr = f'少了{-data["month_data"]["primogems_rate"]}%'

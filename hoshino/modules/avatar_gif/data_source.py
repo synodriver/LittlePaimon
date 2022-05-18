@@ -28,12 +28,11 @@ def rotate(img: Image, angle: int, expand: bool = True) -> Image:
     return img.rotate(angle, Image.BICUBIC, expand=expand)
 
 def to_jpg(frame: Image, bg_color=(255, 255, 255)) -> Image:
-    if frame.mode == 'RGBA':
-        bg = Image.new('RGB', frame.size, bg_color)
-        bg.paste(frame, mask=frame.split()[3])
-        return bg
-    else:
+    if frame.mode != 'RGBA':
         return frame.convert('RGB')
+    bg = Image.new('RGB', frame.size, bg_color)
+    bg.paste(frame, mask=frame.split()[3])
+    return bg
 
 async def eat(frame_dir: str, avatar: Image.Image) -> Image.Image:
     locs = [(180, 60, 100, 100), (184, 75, 100, 100), (183, 98, 100, 100),
@@ -44,7 +43,7 @@ async def eat(frame_dir: str, avatar: Image.Image) -> Image.Image:
             (182, 59, 98, 92), (183, 71, 90, 96), (180, 131, 92, 101)]
     raw_frames = []
     for i in range(23):
-        raw_frame = Image.open(path.join(frame_dir+'/play', f'{i}.png'))
+        raw_frame = Image.open(path.join(f'{frame_dir}/play', f'{i}.png'))
         raw_frame = raw_frame.convert('RGBA')
         raw_frames.append(raw_frame)
     img_frames = []
@@ -57,9 +56,9 @@ async def eat(frame_dir: str, avatar: Image.Image) -> Image.Image:
         frame.paste(raw_frame, mask=raw_frame)
         img_frames.append(frame)
     frames = []
-    for i in range(2):
-        frames.extend(img_frames[0:12])
-    frames.extend(img_frames[0:8])
+    for _ in range(2):
+        frames.extend(img_frames[:12])
+    frames.extend(img_frames[:8])
     frames.extend(img_frames[12:18])
     frames.extend(raw_frames[18:23])
 
@@ -76,7 +75,7 @@ async def rua(frame_dir: str, avatar: Image.Image) -> Image.Image:
         frame = Image.new('RGBA', (112, 112), (255, 255, 255, 0))
         x, y, w, h = locs[i]
         frame.paste(avatar.resize((w, h), Image.ANTIALIAS), (x, y))
-        hand = Image.open(path.join(frame_dir+'/petpet', f'{i}.png')).convert("RGBA")
+        hand = Image.open(path.join(f'{frame_dir}/petpet', f'{i}.png')).convert("RGBA")
         frame.paste(hand, mask=hand)
         frames.append(frame)
     out_path = path.join(frame_dir, 'output.gif')
@@ -90,7 +89,7 @@ async def kiss(frame_dir: str, another: Image.Image,self: Image.Image) -> Image.
                  (98, 55), (35, 65), (38, 100), (70, 80), (84, 65), (75, 65)]
     frames = []
     for i in range(13):
-        frame = Image.open(path.join(frame_dir+'/kiss', f'{i}.png')).convert("RGBA")
+        frame = Image.open(path.join(f'{frame_dir}/kiss', f'{i}.png')).convert("RGBA")
         another_head = circle(another).resize((50, 50))
         frame.paste(another_head, user_locs[i], mask=another_head)
         self_head = circle(self).resize((40, 40))
@@ -107,7 +106,7 @@ async def rub(frame_dir: str, another: Image.Image, self: Image.Image) -> Image.
                  (65, 5, 75, 75, -20), (95, 57, 100, 55, -70), (109, 107, 65, 75, 0)]
     frames = []
     for i in range(6):
-        frame = Image.open(path.join(frame_dir+'/rub', f'{i}.png')).convert("RGBA")
+        frame = Image.open(path.join(f'{frame_dir}/rub', f'{i}.png')).convert("RGBA")
         x, y, w, h = user_locs[i]
         another_head = circle(another).resize((w, h))
         frame.paste(another_head, (x, y), mask=another_head)
@@ -127,7 +126,10 @@ async def pat(frame_dir: str, avatar: Image.Image) -> Image.Image:
         frame = Image.new('RGBA', (235, 196), (255, 255, 255, 0))
         x, y, w, h = locs[1] if i == 2 else locs[0]
         frame.paste(avatar.resize((w, h)), (x, y))
-        raw_frame = Image.open(path.join(frame_dir+'/pat', f'{i}.png')).convert("RGBA")
+        raw_frame = Image.open(
+            path.join(f'{frame_dir}/pat', f'{i}.png')
+        ).convert("RGBA")
+
         frame.paste(raw_frame, mask=raw_frame)
         img_frames.append(frame)
     seq = [0, 1, 2, 3, 1, 2, 3, 0, 1, 2, 3, 0, 0, 1, 2, 3,
@@ -139,7 +141,12 @@ async def pat(frame_dir: str, avatar: Image.Image) -> Image.Image:
 
 async def crawl(frame_dir: str, avatar: Image.Image) -> Image.Image:
     img = circle(avatar).resize((100, 100))
-    frame = Image.open(path.join(frame_dir+'/crawl', '{:02d}.jpg'.format(random.randint(1, 92)))).convert("RGBA")
+    frame = Image.open(
+        path.join(
+            f'{frame_dir}/crawl', '{:02d}.jpg'.format(random.randint(1, 92))
+        )
+    ).convert("RGBA")
+
     frame.paste(img, (0, 400), mask=img)
     out_path = path.join(frame_dir, 'output.jpeg')
     frame = frame.convert('RGB')
@@ -149,7 +156,7 @@ async def crawl(frame_dir: str, avatar: Image.Image) -> Image.Image:
 async def throw(frame_dir: str, avatar: Image.Image) -> Image.Image:
     img = rotate(circle(avatar), random.randint(1, 360),expand=False)
     img = img.resize((143, 143))
-    frame = Image.open(path.join(frame_dir+'/throw', '0.png')).convert("RGBA")
+    frame = Image.open(path.join(f'{frame_dir}/throw', '0.png')).convert("RGBA")
     frame.paste(img, (15, 178), mask=img)
     out_path = path.join(frame_dir, 'output.jpeg')
     frame = frame.convert('RGB')
@@ -157,7 +164,10 @@ async def throw(frame_dir: str, avatar: Image.Image) -> Image.Image:
     return out_path
 
 async def support(frame_dir: str, avatar: Image.Image) -> Image.Image:
-    support = Image.open(path.join(frame_dir+'/support', '0.png')).convert("RGBA")
+    support = Image.open(path.join(f'{frame_dir}/support', '0.png')).convert(
+        "RGBA"
+    )
+
     frame = Image.new('RGBA', support.size, (255, 255, 255, 0))
     img = rotate(avatar.resize((815, 815)), 23)
     frame.paste(img, (-172, -17))
@@ -168,7 +178,7 @@ async def support(frame_dir: str, avatar: Image.Image) -> Image.Image:
     return out_path
 
 async def rip(frame_dir: str, avatar: Image.Image) -> Image.Image:
-    rip = Image.open(path.join(frame_dir+'/rip', '0.png')).convert("RGBA")
+    rip = Image.open(path.join(f'{frame_dir}/rip', '0.png')).convert("RGBA")
     frame = Image.new('RGBA', rip.size, (255, 255, 255, 0))
     left = rotate(avatar.resize((385, 385)), 24)
     right = rotate(avatar.resize((385, 385)), -11)

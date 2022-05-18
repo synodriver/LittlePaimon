@@ -24,8 +24,7 @@ def getApi(url, gachaType, size, page, end_id=""):
     param_dict["end_id"] = end_id
     param = parse.urlencode(param_dict)
     path = str(url).split("?")[0]
-    api = path + "?" + param
-    return api
+    return f"{path}?{param}"
 
 
 async def checkApi(url):
@@ -54,16 +53,14 @@ async def checkApi(url):
 def getQueryVariable(variable):
     query = str(variable).split("?")[1]  # fixme
     vars = query.split("&")
-    for v in vars:
-        if v.split("=")[0] == variable:
-            return v.split("=")[1]
-    return ""
+    return next((v.split("=")[1] for v in vars if v.split("=")[0] == variable), "")
 
 
 async def getGachaInfo():
     region = getQueryVariable("region")
     lang = getQueryVariable("lang")
-    gachaInfoUrl = "https://webstatic.mihoyo.com/hk4e/gacha_info/{}/items/{}.json".format(region, lang)
+    gachaInfoUrl = f"https://webstatic.mihoyo.com/hk4e/gacha_info/{region}/items/{lang}.json"
+
     # r = requests.get(gachaInfoUrl)  # fixme
     async with aiohttp.ClientSession() as session:
         async with session.get(gachaInfoUrl) as r:

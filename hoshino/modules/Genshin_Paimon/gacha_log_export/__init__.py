@@ -39,7 +39,7 @@ async def ckjl(bot: Bot, event: MessageEvent):
         return
     find_filetype = r'(?P<filetype>xlsx|json)'
     match = re.search(find_filetype, msg)
-    filetype = match.group('filetype') if match else 'xlsx'
+    filetype = match['filetype'] if match else 'xlsx'
     if filetype == 'xlsx':
         filetype = f'gachaExport-{uid}.xlsx'
     else:
@@ -61,9 +61,8 @@ async def update_ckjl(bot: Bot, event: MessageEvent):
         await bot.send(event, '请把uid给派蒙哦，比如获取抽卡记录100000001 链接', at_sender=True)
         return
     if msg:
-        match = re.search(r'(https://webstatic.mihoyo.com/.*#/log)', msg)
-        if match:
-            url = str(match.group(1))
+        if match := re.search(r'(https://webstatic.mihoyo.com/.*#/log)', msg):
+            url = str(match[1])
         else:
             await bot.send(event, '你这个抽卡链接不对哦，应该是以https://开头、#/log结尾的！', at_sender=True)
             return
@@ -110,7 +109,7 @@ async def get_ckjl(bot: Bot, event: MessageEvent):
         await bot.send(event, '请把uid给派蒙哦，比如获取抽卡记录100000001 链接', at_sender=True)
         return
     match = re.search(r'(all|角色|武器|常驻|新手)', msg)
-    pool = match.group(1) if match else 'all'
+    pool = match[1] if match else 'all'
     local_data = os.path.join(data_path, f'gachaData-{uid}.json')
     if not os.path.exists(local_data):
         await bot.send(event, '你在派蒙这里还没有抽卡记录哦，对派蒙说 获取抽卡记录 吧！', at_sender=True)

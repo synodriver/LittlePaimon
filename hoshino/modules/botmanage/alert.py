@@ -3,7 +3,10 @@ from nonebot.adapters.onebot.v11 import GroupDecreaseNoticeEvent, Bot
 
 
 async def check_event(event: GroupDecreaseNoticeEvent):
-    return True if isinstance(event, GroupDecreaseNoticeEvent) and event.user_id == event.self_id else False
+    return (
+        isinstance(event, GroupDecreaseNoticeEvent)
+        and event.user_id == event.self_id
+    )
 
 
 matcher = on_notice(check_event)

@@ -34,8 +34,9 @@ async def main(bot: Bot, event: MessageEvent):
     else:
         gid = str(event.user_id)
     uid, msg, user_id, use_cache = await get_uid_in_msg(event)
-    find_remind_enable = re.search(r'(?P<action>开启提醒|关闭提醒|删除提醒)\s*((?P<num>\d{1,3})|(?:.*))', msg)
-    if find_remind_enable:
+    if find_remind_enable := re.search(
+        r'(?P<action>开启提醒|关闭提醒|删除提醒)\s*((?P<num>\d{1,3})|(?:.*))', msg
+    ):
         if event.message_type == 'guild':
             await bot.send(event, '实时便签提醒功能暂时无法在频道内使用哦')
             return
@@ -89,10 +90,7 @@ async def check_note():
         for user_id, uid, count, remind_group, enable, last_remind_time, today_remind_count in data:
             if last_remind_time:
                 last_remind_time = datetime.strptime(last_remind_time, '%Y%m%d %H:%M:%S')
-                if now_time - last_remind_time > timedelta(minutes=30):
-                    time_e = True
-                else:
-                    time_e = False
+                time_e = now_time - last_remind_time > timedelta(minutes=30)
             else:
                 time_e = True
             if enable and ((
@@ -102,36 +100,45 @@ async def check_note():
                     try:
                         await delete_note_remind(user_id, uid)
                         if user_id == remind_group:
+                            await get_bot().send_private_msg(
+                                user_id=user_id,
+                                message=(
+                                    MessageSegment.at(user_id)
+                                    + '你的cookie失效了哦,派蒙没办法帮你检查树脂,请重新添加ck后再叫派蒙开启提醒'
+                                ),
+                            )
+
+                        else:
+                            await get_bot().send_group_msg(
+                                group_id=remind_group,
+                                message=(
+                                    MessageSegment.at(user_id)
+                                    + '你的cookie失效了哦,派蒙没办法帮你检查树脂,请重新添加ck后再叫派蒙开启提醒'
+                                ),
+                            )
+
+                    except Exception as e:
+                        logger.error(f'---派蒙发送树脂提醒失败:{e}---')
+                elif now_data['data']['current_resin'] >= count:
+                    logger.info(f'---用户{user_id}的uid{uid}的树脂已经达到阈值了,发送提醒---')
+                    if today_remind_count:
+                        today_remind_count += 1
+                    else:
+                        today_remind_count = 1
+                    now_time_str = now_time.strftime('%Y%m%d %H:%M:%S')
+                    try:
+                        await update_note_remind(user_id, uid, count, remind_group, enable, now_time_str,
+                                                 today_remind_count)
+                        if user_id == remind_group:
                             await get_bot().send_private_msg(user_id=user_id,
                                                              message=MessageSegment.at(
-                                                                 user_id) + f'你的cookie失效了哦,派蒙没办法帮你检查树脂,请重新添加ck后再叫派蒙开启提醒')
+                                                                 user_id) + f'⚠️你的树脂已经达到了{now_data["data"]["current_resin"]},记得清理哦!⚠️')
                         else:
                             await get_bot().send_group_msg(group_id=remind_group,
                                                            message=MessageSegment.at(
-                                                               user_id) + f'你的cookie失效了哦,派蒙没办法帮你检查树脂,请重新添加ck后再叫派蒙开启提醒')
+                                                               user_id) + f'⚠️你的树脂已经达到了{now_data["data"]["current_resin"]},记得清理哦!⚠️')
                     except Exception as e:
                         logger.error(f'---派蒙发送树脂提醒失败:{e}---')
-                else:
-                    if now_data['data']['current_resin'] >= count:
-                        logger.info(f'---用户{user_id}的uid{uid}的树脂已经达到阈值了,发送提醒---')
-                        if today_remind_count:
-                            today_remind_count += 1
-                        else:
-                            today_remind_count = 1
-                        now_time_str = now_time.strftime('%Y%m%d %H:%M:%S')
-                        try:
-                            await update_note_remind(user_id, uid, count, remind_group, enable, now_time_str,
-                                                     today_remind_count)
-                            if user_id == remind_group:
-                                await get_bot().send_private_msg(user_id=user_id,
-                                                                 message=MessageSegment.at(
-                                                                     user_id) + f'⚠️你的树脂已经达到了{now_data["data"]["current_resin"]},记得清理哦!⚠️')
-                            else:
-                                await get_bot().send_group_msg(group_id=remind_group,
-                                                               message=MessageSegment.at(
-                                                                   user_id) + f'⚠️你的树脂已经达到了{now_data["data"]["current_resin"]},记得清理哦!⚠️')
-                        except Exception as e:
-                            logger.error(f'---派蒙发送树脂提醒失败:{e}---')
                 await sleep(3)
 
 

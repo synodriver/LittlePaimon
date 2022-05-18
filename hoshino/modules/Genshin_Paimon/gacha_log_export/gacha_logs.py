@@ -24,8 +24,7 @@ async def getGachaLogs(url, gachaTypeId):
         gacha = j["data"]["list"]
         if not len(gacha):
             break
-        for i in gacha:
-            gachaList.append(i)
+        gachaList.extend(iter(gacha))
         end_id = j["data"]["list"][-1]["id"]
         await sleep(0.5)
 
@@ -36,18 +35,14 @@ def mergeDataFunc(localData, gachaData):
     for banner in gachaQueryTypeDict:
         bannerLocal = localData["gachaLog"][banner]
         bannerGet = gachaData["gachaLog"][banner]
-        if bannerGet == bannerLocal:
-            pass
-        else:
+        if bannerGet != bannerLocal:
             # print("合并", gachaQueryTypeDict[banner], end=": ", flush=True)
             flaglist = [1] * len(bannerGet)
             loc = [[i["time"], i["name"]] for i in bannerLocal]
             for i in range(len(bannerGet)):
                 gachaGet = bannerGet[i]
                 get = [gachaGet["time"], gachaGet["name"]]
-                if get in loc:
-                    pass
-                else:
+                if get not in loc:
                     flaglist[i] = 0
 
             tempData = []
@@ -63,8 +58,7 @@ def mergeDataFunc(localData, gachaData):
 
 
 async def get_data(url):
-    gachaData = {}
-    gachaData["gachaLog"] = {}
+    gachaData = {"gachaLog": {}}
     for gachaTypeId in gachaQueryTypeIds:
         gachaLog = await getGachaLogs(url, gachaTypeId)
         gachaData["gachaLog"][gachaTypeId] = gachaLog
