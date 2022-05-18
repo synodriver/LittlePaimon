@@ -40,7 +40,7 @@ async def draw_abyss_floor_card(floor, floor_n):
     for j in floor['levels']:
         star = Image.open(os.path.join(res_path, 'abyss', 'star.png')).convert('RGBA')
         star_w = 500
-        for i in range(0, j['star']):
+        for _ in range(j['star']):
             floor_img.alpha_composite(star, (star_w, h1 + 94))
             star_w += 50
         battles = j['battles']

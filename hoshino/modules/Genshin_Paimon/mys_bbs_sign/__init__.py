@@ -50,26 +50,24 @@ async def bbs_auto_sign(bot: Bot, event: MessageEvent):
         await bot.send(event, '自动签到功能暂时只限Q群内使用哦')
         return
     msg = event.message.extract_plain_text().strip()
-    find_uid = re.search(r'(?P<uid>(1|2|5)\d{8})', msg)
-    if not find_uid:
-        await bot.send(event, '请把正确的需要帮忙签到的uid给派蒙哦!', at_sender=True)
-    else:
-        uid = find_uid.group('uid')
-        find_action = re.search(r'(?P<action>开启|启用|打开|关闭|禁用)', msg)
-        if find_action:
-            if find_action.group('action') in ['开启', '启用', '打开']:
+    if find_uid := re.search(r'(?P<uid>(1|2|5)\d{8})', msg):
+        uid = find_uid['uid']
+        if find_action := re.search(r'(?P<action>开启|启用|打开|关闭|禁用)', msg):
+            if find_action['action'] in ['开启', '启用', '打开']:
                 cookie = await get_private_cookie(uid, key='uid')
                 if not cookie:
                     await bot.send(event, '你的该uid还没绑定cookie哦，先用ysb绑定吧!', at_sender=True)
                     return
                 await add_auto_sign(str(event.user_id), uid, str(event.group_id))
                 await bot.send(event, '开启米游社自动签到成功,派蒙会在每日0点帮你签到', at_sender=True)
-            elif find_action.group('action') in ['关闭', '禁用']:
+            elif find_action['action'] in ['关闭', '禁用']:
                 await delete_auto_sign(str(event.user_id), uid)
                 await bot.send(event, '关闭米游社自动签到成功', at_sender=True)
         else:
             await add_auto_sign(str(event.user_id), uid, str(event.group_id))
             await bot.send(event, '开启米游社自动签到成功,派蒙会在每日0点帮你签到', at_sender=True)
+    else:
+        await bot.send(event, '请把正确的需要帮忙签到的uid给派蒙哦!', at_sender=True)
 
 
 scheduler = nonebot.require("nonebot_plugin_apscheduler").scheduler

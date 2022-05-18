@@ -202,7 +202,7 @@ async def draw_player_card(data, chara_data, uid, nickname="旅行者"):
     bg_img = Image.open(os.path.join(res_path, 'player_card', '背景.png')).convert('RGBA')
     bg_draw = ImageDraw.Draw(bg_img)
     # 头部名片
-    name_id = random.choice(data['avatars'][0:8])['id']
+    name_id = random.choice(data['avatars'][:8])['id']
     name_card = Image.open(os.path.join(res_path, 'name_card', f'{name_id}.png')).crop((0, 40, 840, 360)).resize(
         (846, 322))
     avatar = Image.open(os.path.join(res_path, 'role_profile', f'{name_id}.png')).resize((240, 240))
@@ -246,9 +246,9 @@ async def draw_player_card(data, chara_data, uid, nickname="旅行者"):
             chara_card = await get_chara_card(chara)
             if i <= 4:
                 bg_img.alpha_composite(chara_card.resize((180, 249)), (840 + i * 205, 700))
-            elif i > 4 and i <= 8:
+            elif i <= 8:
                 bg_img.alpha_composite(chara_card.resize((180, 249)), (840 + (i - 4) * 205, 974))
-            elif i > 8:
+            else:
                 break
     else:
         nocha = '*这uid关闭了角色详情显示，派蒙看不到哦'
@@ -311,8 +311,8 @@ async def draw_all_chara_card(data, uid):
         return f'派蒙获取数据失败了，获取状态：\n{data["message"]},{data["retcode"]}'
     data = data['data']['avatars']
     chara_num = len(data)
-    col = int(chara_num / 4)
-    if not chara_num % 4 == 0:
+    col = chara_num // 4
+    if chara_num % 4 != 0:
         col += 1
     for chara in data:
         if chara['name'] == '旅行者':
@@ -331,7 +331,7 @@ async def draw_all_chara_card(data, uid):
     bg_bottom = Image.open(os.path.join(res_path, 'player_card', '卡片底部.png'))
     bg_img = Image.new('RGBA', (1304, 382 + col * 424 + (col - 1) * 50 + 87), (0, 0, 0, 0))
     bg_img.paste(bg_top, (0, 0))
-    for i in range(0, col):
+    for i in range(col):
         bg_img.paste(bg_middle, (0, 382 + i * 474))
     n = 0
     for chara in chara_list:

@@ -90,7 +90,7 @@ async def my_characters(bot: Bot, event: MessageEvent):
     if not uid:
         await matcher3.reject('请把正确的uid给派蒙哦,例如ysc100123456钟离', at_sender=True)
     if not msg:
-        await matcher3.reject(f'要把角色名给派蒙呀!例如ysc100123456钟离', at_sender=True)
+        await matcher3.reject('要把角色名给派蒙呀!例如ysc100123456钟离', at_sender=True)
     chara = msg.split(' ')[0]
     chara_name = get_id_by_alias(chara)
     if not chara_name:

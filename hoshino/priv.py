@@ -39,14 +39,14 @@ def check_block_group(group_id):
     if group_id in _black_group and datetime.now() > _black_group[group_id]:
         del _black_group[group_id]  # 拉黑时间过期
         return False
-    return bool(group_id in _black_group)
+    return group_id in _black_group
 
 
 def check_block_user(user_id):
     if user_id in _black_user and datetime.now() > _black_user[user_id]:
         del _black_user[user_id]  # 拉黑时间过期
         return False
-    return bool(user_id in _black_user)
+    return user_id in _black_user
 
 
 # ========================================================#
@@ -65,12 +65,10 @@ def get_user_priv(ev: MessageEvent):
     if ev['message_type'] == 'group':
         if not ev.anonymous:
             role = ev.sender.get('role')
-            if role == 'member':
-                return NORMAL
-            elif role == 'admin':
+            if role in ['admin', 'administrator']:
                 return ADMIN
-            elif role == 'administrator':
-                return ADMIN  # for cqhttpmirai
+            elif role == 'member':
+                return NORMAL
             elif role == 'owner':
                 return OWNER
         return NORMAL
@@ -93,12 +91,10 @@ def get_target_priv(bot, ev: MessageEvent, uid):
     if ev['message_type'] == 'group':
         if not ev.anonymous:
             role = bot.get_group_member_info(ev.group_id, uid)['role']
-            if role == 'member':
-                return NORMAL
-            elif role == 'admin':
+            if role in ['admin', 'administrator']:
                 return ADMIN
-            elif role == 'administrator':
-                return ADMIN  # for cqhttpmirai
+            elif role == 'member':
+                return NORMAL
             elif role == 'owner':
                 return OWNER
         return NORMAL
@@ -110,8 +106,8 @@ def get_target_priv(bot, ev: MessageEvent, uid):
 
 
 def check_priv(ev: MessageEvent, require: int) -> bool:
-    if ev['message_type'] == 'group' or ev['message_type'] == 'guild':
-        return bool(get_user_priv(ev) >= require)
+    if ev['message_type'] in ['group', 'guild']:
+        return get_user_priv(ev) >= require
     else:
         return True
 

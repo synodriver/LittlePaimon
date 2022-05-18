@@ -130,13 +130,7 @@ short_name={
 }
 
 def get_id_by_alias(name):
-    for c in character_alias.items():
-        if name in c[1]:
-            return c
-    return None
+    return next((c for c in character_alias.items() if name in c[1]), None)
 
 def get_short_name(name):
-    for n in short_name.items():
-        if name == n[0]:
-            return n[1]
-    return name
+    return next((n[1] for n in short_name.items() if name == n[0]), name)

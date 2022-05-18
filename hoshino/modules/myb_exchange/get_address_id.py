@@ -20,11 +20,9 @@ async def get_address(cookie):
     }
     res = requests.get(url=url, headers=header)
     res = res.json()
-    if res['message'] == 'OK':
-        address = res['data']['list']
-        if address:
-            for add in address:
-                add_list[add['id']] = f'姓名:{add["connect_name"]} 电话:{add["connect_mobile"]} 地址:{add["province_name"] + add["city_name"] + add["county_name"] + add["addr_ext"]}'
-        return add_list
-    else:
+    if res['message'] != 'OK':
         return None
+    if address := res['data']['list']:
+        for add in address:
+            add_list[add['id']] = f'姓名:{add["connect_name"]} 电话:{add["connect_mobile"]} 地址:{add["province_name"] + add["city_name"] + add["county_name"] + add["addr_ext"]}'
+    return add_list

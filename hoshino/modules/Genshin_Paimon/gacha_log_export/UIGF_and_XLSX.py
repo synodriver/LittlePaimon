@@ -14,17 +14,14 @@ def id_generator():
         yield str(id)
 
 def convertUIGF(gachaLog, uid):
-    UIGF_data = {}
-    UIGF_data["info"] = {}
-    UIGF_data["info"]["uid"] = uid
-    UIGF_data["info"]["lang"] = "zh-cn"
+    UIGF_data = {"info": {"uid": uid, "lang": "zh-cn"}}
     UIGF_data["info"]["export_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
     UIGF_data["info"]["export_app"] = "genshin-gacha-export"
     UIGF_data["info"]["export_app_version"] = 'v2.5.0.02221942'
     UIGF_data["info"]["uigf_version"] = "v2.2"
     UIGF_data["info"]["export_timestamp"] = int(time.time())
     all_gachaDictList = []
-    
+
     for gacha_type in gachaQueryTypeIds:
         gacha_log = gachaLog.get(gacha_type, [])
         gacha_log = sorted(gacha_log, key=lambda gacha: gacha["time"], reverse=True)
@@ -45,6 +42,8 @@ def convertUIGF(gachaLog, uid):
 def writeXLSX(uid, gachaLog, gachaTypeIds):
     t = time.strftime("%Y%m%d%H%M%S", time.localtime())
     workbook = xlsxwriter.Workbook(os.path.join(data_path, f"gachaExport-{uid}.xlsx"))
+    first_row = 1  # 不包含表头第一行 (zero indexed)
+    first_col = 0  # 第一列
     for id in gachaTypeIds:
         gachaDictList = gachaLog[id]
         gachaTypeName = gachaQueryTypeDict[id]
@@ -79,8 +78,6 @@ def writeXLSX(uid, gachaLog, gachaTypeIds):
         star_5 = workbook.add_format({"color": "#bd6932", "bold": True})
         star_4 = workbook.add_format({"color": "#a256e1", "bold": True})
         star_3 = workbook.add_format({"color": "#8e8e8e"})
-        first_row = 1  # 不包含表头第一行 (zero indexed)
-        first_col = 0  # 第一列
         last_row = len(gachaDictList)  # 最后一行
         last_col = len(excel_header) - 1  # 最后一列，zero indexed 所以要减 1
         worksheet.conditional_format(first_row, first_col, last_row, last_col, {"type": "formula", "criteria": "=$D2=5", "format": star_5})
@@ -93,9 +90,7 @@ def writeXLSX(uid, gachaLog, gachaTypeIds):
 
     UIGF_data = convertUIGF(gachaLog, uid)
     all_gachaDictList = UIGF_data["list"]
-    all_counter = 0
-
-    for gacha in all_gachaDictList:
+    for all_counter, gacha in enumerate(all_gachaDictList):
         count = gacha.get("count", "")
         gacha_type = gacha.get("gacha_type", "")
         id = gacha.get("id", "")
@@ -110,6 +105,4 @@ def writeXLSX(uid, gachaLog, gachaTypeIds):
 
         excel_data = [count, gacha_type, id, item_id, item_type, lang, name, rank_type, time_str, uid, uigf_gacha_type]
         worksheet.write_row(all_counter + 1, 0, excel_data)
-        all_counter += 1
-
     workbook.close()

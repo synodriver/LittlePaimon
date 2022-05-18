@@ -33,8 +33,7 @@ def load_config(inbuilt_file_var):
     filename = os.path.join(os.path.dirname(inbuilt_file_var), 'config.json')
     try:
         with open(filename, encoding='utf8') as f:
-            config = json.load(f)
-            return config
+            return json.load(f)
     except Exception as e:
         nonebot.logger.exception(e)
         return {}
@@ -68,14 +67,14 @@ def pic2b64(pic: Image) -> str:
     buf = BytesIO()
     pic.save(buf, format='PNG')
     base64_str = base64.b64encode(buf.getvalue()).decode()
-    return 'base64://' + base64_str
+    return f'base64://{base64_str}'
 
 
 def fig2b64(plt: plt) -> str:
     buf = BytesIO()
     plt.savefig(buf, format='PNG', dpi=100)
     base64_str = base64.b64encode(buf.getvalue()).decode()
-    return 'base64://' + base64_str
+    return f'base64://{base64_str}'
 
 
 def concat_pic(pics, border=5):
@@ -141,7 +140,7 @@ class FreqLimiter:
         self.default_cd = default_cd_seconds
 
     def check(self, key) -> bool:
-        return bool(time.time() >= self.next_time[key])
+        return time.time() >= self.next_time[key]
 
     def start_cd(self, key, cd_time=0):
         self.next_time[key] = time.time() + (cd_time if cd_time > 0 else self.default_cd)
@@ -156,7 +155,7 @@ class PriFreqLimiter:
         self.default_cd = default_cd_seconds
 
     def check(self, group, user) -> bool:
-        return bool(time.time() >= self.next_time[group][user])
+        return time.time() >= self.next_time[group][user]
 
     def start_cd(self, group, user, cd_time=0):
         self.next_time[group][user] = time.time() + (cd_time if cd_time > 0 else self.default_cd)
@@ -179,7 +178,7 @@ class DailyNumberLimiter:
         if day != self.today:
             self.today = day
             self.count.clear()
-        return bool(self.count[key] < self.max)
+        return self.count[key] < self.max
 
     def get_num(self, key):
         return self.count[key]

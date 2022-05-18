@@ -59,7 +59,7 @@ def weapon_probability(rank, count):
 
 
 def get_pool_type(gacha_type):
-    if gacha_type == 301 or gacha_type == 400:
+    if gacha_type in [301, 400]:
         return 'role'
     if gacha_type == 200:
         return 'permanent'
@@ -69,11 +69,29 @@ def get_pool_type(gacha_type):
 def get_rank(uid, pool_str):
     value = random_int()
     if pool_str == 'weapon':
-        index_5 = weapon_probability(5, user_info[uid]["gacha_list"][("gacha_5_%s" % pool_str)])
-        index_4 = weapon_probability(4, user_info[uid]["gacha_list"][("gacha_4_%s" % pool_str)]) + index_5
+        index_5 = weapon_probability(
+            5, user_info[uid]["gacha_list"][f"gacha_5_{pool_str}"]
+        )
+
+        index_4 = (
+            weapon_probability(
+                4, user_info[uid]["gacha_list"][f"gacha_4_{pool_str}"]
+            )
+            + index_5
+        )
+
     else:
-        index_5 = character_probability(5, user_info[uid]["gacha_list"][("gacha_5_%s" % pool_str)])
-        index_4 = character_probability(4, user_info[uid]["gacha_list"][("gacha_4_%s" % pool_str)]) + index_5
+        index_5 = character_probability(
+            5, user_info[uid]["gacha_list"][f"gacha_5_{pool_str}"]
+        )
+
+        index_4 = (
+            character_probability(
+                4, user_info[uid]["gacha_list"][f"gacha_4_{pool_str}"]
+            )
+            + index_5
+        )
+
     if value <= index_5:
         return 5
     elif value <= index_4:
@@ -86,9 +104,16 @@ def is_Up(uid, rank, pool_str):
     if pool_str == 'permanent':
         return False
     elif pool_str == 'weapon':
-        return random_int() <= 7500 or user_info[uid]["gacha_list"]["is_up_%s_weapon" % rank]
+        return (
+            random_int() <= 7500
+            or user_info[uid]["gacha_list"][f"is_up_{rank}_weapon"]
+        )
+
     else:
-        return random_int() <= 5000 or user_info[uid]["gacha_list"]["is_up_%s_role" % rank]
+        return (
+            random_int() <= 5000
+            or user_info[uid]["gacha_list"][f"is_up_{rank}_role"]
+        )
 
 
 def once(uid, gacha_data):
@@ -103,8 +128,8 @@ def once(uid, gacha_data):
     user_info[uid]["gacha_list"]["wish_total"] += 1
     if rank == 3:
         role = random.choice(gacha_data['r3_prob_list'])
-        user_info[uid]["gacha_list"][("gacha_4_%s" % pool_str)] += 1
-        user_info[uid]["gacha_list"][("gacha_5_%s" % pool_str)] += 1
+        user_info[uid]["gacha_list"][f"gacha_4_{pool_str}"] += 1
+        user_info[uid]["gacha_list"][f"gacha_5_{pool_str}"] += 1
         role['count'] = 1
     else:
         if rank == 5 and pool_str == 'weapon' and user_info[uid]["gacha_list"][
@@ -113,19 +138,19 @@ def once(uid, gacha_data):
             role['item_type'] = '武器'
             role['rank'] = rank
         elif is_up:
-            role = random.choice(gacha_data['r%s_up_items' % rank])
-            user_info[uid]["gacha_list"]["wish_%s_up" % rank] += 1
+            role = random.choice(gacha_data[f'r{rank}_up_items'])
+            user_info[uid]["gacha_list"][f"wish_{rank}_up"] += 1
             role['rank'] = rank
         else:
-            role = random.choice(gacha_data['r%s_prob_list' % rank])
+            role = random.choice(gacha_data[f'r{rank}_prob_list'])
             while True:
-                role = random.choice(gacha_data['r%s_prob_list' % rank])
+                role = random.choice(gacha_data[f'r{rank}_prob_list'])
                 if role['is_up'] == 0:
                     break
         if rank == 4:
-            user_info[uid]["gacha_list"][("gacha_5_%s" % pool_str)] += 1
+            user_info[uid]["gacha_list"][f"gacha_5_{pool_str}"] += 1
         elif rank == 5:
-            user_info[uid]["gacha_list"][("gacha_4_%s" % pool_str)] += 1
+            user_info[uid]["gacha_list"][f"gacha_4_{pool_str}"] += 1
             if pool_str == 'weapon' and "pool_type" not in gacha_data:
                 if user_info[uid]["gacha_list"]["dg_name"] == '':
                     role['dg_time'] = -1
@@ -136,30 +161,35 @@ def once(uid, gacha_data):
                     user_info[uid]["gacha_list"]["dg_name"] = ''
                     user_info[uid]["gacha_list"]["dg_time"] = 0
                     role['dg_time'] = 3
-        user_info[uid]["gacha_list"]["wish_%s" % rank] += 1
+        user_info[uid]["gacha_list"][f"wish_{rank}"] += 1
         if gacha_data['gacha_type'] != 200:
-            user_info[uid]["gacha_list"][("is_up_%s_%s" % (rank, pool_str))] = not is_up
-        if role['item_type'] == '角色':
-            itemname = 'role'
-        else:
-            itemname = 'weapon'
+            user_info[uid]["gacha_list"][f"is_up_{rank}_{pool_str}"] = not is_up
+        itemname = 'role' if role['item_type'] == '角色' else 'weapon'
         if role['item_name'] not in user_info[uid]["role_list"]:
-            user_info[uid]["%s_list" % itemname][role['item_name']] = {}
-            user_info[uid]["%s_list" % itemname][role['item_name']]['数量'] = 1
-            user_info[uid]["%s_list" % itemname][role['item_name']]['出货'] = []
+            user_info[uid][f"{itemname}_list"][role['item_name']] = {'数量': 1, '出货': []}
             if rank == 5:
-                user_info[uid]["%s_list" % itemname][role['item_name']]['星级'] = '★★★★★'
-                user_info[uid]["%s_list" % itemname][role['item_name']]['出货'].append(
-                    (user_info[uid]['gacha_list']['gacha_%s_%s' % (rank, pool_str)] + 1))
+                user_info[uid][f"{itemname}_list"][role['item_name']]['星级'] = '★★★★★'
+                user_info[uid][f"{itemname}_list"][role['item_name']][
+                    '出货'
+                ].append(
+                    user_info[uid]['gacha_list'][f'gacha_{rank}_{pool_str}']
+                    + 1
+                )
+
             else:
-                user_info[uid]["%s_list" % itemname][role['item_name']]['星级'] = '★★★★'
+                user_info[uid][f"{itemname}_list"][role['item_name']]['星级'] = '★★★★'
         else:
-            user_info[uid]["%s_list" % itemname][role['item_name']]['数量'] += 1
+            user_info[uid][f"{itemname}_list"][role['item_name']]['数量'] += 1
             if rank == 5:
-                user_info[uid]["%s_list" % itemname][role['item_name']]['出货'].append(
-                    (user_info[uid]['gacha_list']['gacha_%s_%s' % (rank, pool_str)] + 1))
-        role['count'] = user_info[uid]["gacha_list"]["gacha_%s_%s" % (rank, pool_str)] + 1
-        user_info[uid]["gacha_list"]["gacha_%s_%s" % (rank, pool_str)] = 0
+                user_info[uid][f"{itemname}_list"][role['item_name']][
+                    '出货'
+                ].append(
+                    user_info[uid]['gacha_list'][f'gacha_{rank}_{pool_str}']
+                    + 1
+                )
+
+        role['count'] = user_info[uid]["gacha_list"][f"gacha_{rank}_{pool_str}"] + 1
+        user_info[uid]["gacha_list"][f"gacha_{rank}_{pool_str}"] = 0
     save_user_info()
     return role
 
@@ -167,8 +197,7 @@ def once(uid, gacha_data):
 def get_assets(path) -> PngImagePlugin.PngImageFile:
     base_path = assets_dir
 
-    cache = cache_img.get(path)
-    if cache:
+    if cache := cache_img.get(path):
         return copy.deepcopy(cache)
     else:
         cache_img[path] = Image.open(str(base_path / path))
@@ -176,23 +205,23 @@ def get_assets(path) -> PngImagePlugin.PngImageFile:
 
 
 def item_bg(rank):
-    return get_assets('%s_background.png' % str(rank)).resize((143, 845))
+    return get_assets(f'{str(rank)}_background.png').resize((143, 845))
 
 
 def rank_icon(rank):
-    return get_assets('%s_star.png' % str(rank))
+    return get_assets(f'{str(rank)}_star.png')
 
 
 async def create_item(rank, item_type, name, element, count, dg_time):
     bg = item_bg(rank)
-    item_img = get_assets(Path(item_type) / (name + '.png'))
+    item_img = get_assets(Path(item_type) / f'{name}.png')
     rank_img = rank_icon(rank).resize((119, 30))
 
     if item_type == '角色':
         item_img = item_img.resize((item_img.size[0] + 12, item_img.size[1] + 45))
         item_img.alpha_composite(rank_img, (4, 510))
 
-        item_type_icon = get_assets(Path('元素') / (element + '.png')).resize((80, 80))
+        item_type_icon = get_assets(Path('元素') / f'{element}.png').resize((80, 80))
         item_img.alpha_composite(item_type_icon, (25, 420))
         bg.alpha_composite(item_img, (3, 125))
 
@@ -200,28 +229,30 @@ async def create_item(rank, item_type, name, element, count, dg_time):
         bg.alpha_composite(item_img, (3, 240))
         bg.alpha_composite(rank_img, (9, 635))
 
-        item_type_icon = type_json.get(name)
-        if item_type_icon:
-            item_type_icon = get_assets(Path('类型') / (item_type_icon + '.png')).resize((100, 100))
+        if item_type_icon := type_json.get(name):
+            item_type_icon = get_assets(
+                Path('类型') / f'{item_type_icon}.png'
+            ).resize((100, 100))
+
 
             bg.alpha_composite(item_type_icon, (18, 530))
     if rank == 5 and count != -1:
         draw = ImageDraw.Draw(bg)
         if len(str(count)) == 2:
-            draw.text((19, 750), ('[' + str(count) + '抽]'), font=countfont, fill='white')
+            draw.text((19, 750), f'[{str(count)}抽]', font=countfont, fill='white')
         else:
-            draw.text((26, 750), ('[' + str(count) + '抽]'), font=countfont, fill='white')
+            draw.text((26, 750), f'[{str(count)}抽]', font=countfont, fill='white')
         if dg_time != -1:
             if dg_time == 3:
                 draw.text((3, 785), ('定轨结束'), font=countfont, fill='white')
             else:
-                draw.text((7, 785), ('定轨' + str(dg_time) + '/2'), font=countfont, fill='white')
+                draw.text((7, 785), f'定轨{str(dg_time)}/2', font=countfont, fill='white')
     return bg
 
 
 def ten(uid, gacha_data, sd) -> PngImagePlugin.PngImageFile:
     gacha_list = []
-    for i in range(0, 10):
+    for i in range(10):
         if gacha_data['gacha_type'] == 'all_star':
             role = random.choice(gacha_data['list'])
             role['count'] = -1
@@ -259,10 +290,15 @@ def more_ten(uid, gacha_data, num, sd):
         img = ten(uid, gacha_data, sd)
     else:
         img = Image.new("RGB", (1024, 575 * num), (255, 255, 255))
-        for i in range(0, num):
+        for i in range(num):
             item_img = ten(uid, gacha_data, sd)
             img.paste(item_img, (0, 575 * i))
     draw = ImageDraw.Draw(img)
-    draw.text((27, 575 * num - 30), ('@%s %s  Created By 惜月の小派蒙' % (str(sd['nickname']), time_str)), font=timefont,
-              fill="#8E8E8E")
+    draw.text(
+        (27, 575 * num - 30),
+        f"@{str(sd['nickname'])} {time_str}  Created By 惜月の小派蒙",
+        font=timefont,
+        fill="#8E8E8E",
+    )
+
     return pil2b64(img, 75)

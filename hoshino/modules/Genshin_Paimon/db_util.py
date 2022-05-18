@@ -35,7 +35,7 @@ def reload_public_cookie(is_drop=True):
 def init_db():
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    
+
     cursor.execute('SELECT NAME FROM sqlite_master WHERE TYPE="table" and NAME="private_cookies"')
     if not cursor.fetchone():
         cursor.execute('''CREATE TABLE private_cookies
@@ -61,7 +61,7 @@ def init_db():
             for d in data['私人'].items():
                 for c in d[1]['cookies']:
                     match = re.search(r'account_id=(\d{6,12})', c['cookie'])
-                    mys_id = match.group(1) if match else ''
+                    mys_id = match[1] if match else ''
                     cursor.execute('INSERT INTO private_cookies (user_id, uid, mys_id, cookie) VALUES (?, ?, ?, ?);', (d[0], c['uid'], mys_id, c['cookie']))
                 cursor.execute('INSERT INTO last_query (user_id, uid, last_time) VALUES (?, ?, ?);', (d[0], d[1]['last_query'], datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
             cursor.execute('''CREATE TABLE IF NOT EXISTS public_cookies (
@@ -176,19 +176,16 @@ async def get_cookie_cache(value, key='uid'):
         mys_id TEXT,
         cookie TEXT);''')
     cursor.execute(f'SELECT cookie FROM cookie_cache WHERE {key}="{value}"')
-    res = cursor.fetchone()
-    if res:
+    if res := cursor.fetchone():
         try:
             cursor.execute('SELECT user_id, uid, mys_id FROM private_cookies WHERE cookie=?;', (res[0],))
-            is_in_private = cursor.fetchone()
-            if is_in_private:
+            if is_in_private := cursor.fetchone():
                 return {'type':'private', 'user_id': is_in_private[0], 'cookie': res[0], 'uid': is_in_private[1], 'mys_id': is_in_private[2]}
         except:
             pass
         try:
             cursor.execute('SELECT no FROM public_cookies WHERE cookie=?;', (res[0],))
-            is_in_public = cursor.fetchone()
-            if is_in_public:
+            if is_in_public := cursor.fetchone():
                 return {'type':'public', 'cookie': res[0], 'no': is_in_public[0]}
         except:
             pass

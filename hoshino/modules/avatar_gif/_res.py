@@ -50,19 +50,13 @@ class Res:
 
     @classmethod
     def get_random_image(cls, folder=None) -> 'MessageSegment':
-        if not folder:
-            image_path = cls.image_dir
-        else:
-            image_path = path.join(cls.image_dir, folder)
+        image_path = path.join(cls.image_dir, folder) if folder else cls.image_dir
         image_name = get_random_file(image_path)
         return cls.image(path.join(image_path, image_name))
 
     @classmethod
     def get_random_record(cls, folder=None) -> 'MessageSegment':
-        if not folder:
-            record_path = cls.record_dir
-        else:
-            record_path = path.join(cls.record_dir, folder)
+        record_path = path.join(cls.record_dir, folder) if folder else cls.record_dir
         rec_name = get_random_file(record_path)
         return cls.record(path.join(record_path, rec_name))
 

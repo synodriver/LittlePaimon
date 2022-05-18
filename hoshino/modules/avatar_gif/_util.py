@@ -37,8 +37,7 @@ async def download_async(url: str, save_path: str, save_name: str, auto_extensio
 
 def get_random_file(path) -> str:
     files = os.listdir(path)
-    rfile = random.choice(files)
-    return rfile
+    return random.choice(files)
 
 
 def get_md5(val: Union[bytes, str]) -> str:
@@ -72,8 +71,7 @@ async def broadcast(bot: Bot, msg: Union[str, MessageSegment, Message], groups=N
 
 
 def extract_url_from_event(event: Event) -> List[str]:
-    urls = re.findall(r'http.*?term=\d', str(event.message))
-    return urls
+    return re.findall(r'http.*?term=\d', str(event.message))
 
 
 def save_config(config: dict, path: str):
@@ -89,8 +87,7 @@ def save_config(config: dict, path: str):
 def load_config(path):
     try:
         with open(path, mode='r', encoding='utf-8') as f:
-            config = json.load(f)
-            return config
+            return json.load(f)
     except Exception as ex:
         logger.error(f'exception occured when loading config in {path}  {ex}')
         logger.exception(ex)
@@ -102,8 +99,8 @@ class RSS():
         self.base_url = 'http://101.32.36.8:1200'
         self.route: str = None
         self.xml: bytes = None
-        self.filter: dict = dict()
-        self.filterout: dict = dict()  # out为过滤掉
+        self.filter: dict = {}
+        self.filterout: dict = {}
         '''
         filter 选出想要的内容
         filter: 过滤标题和描述
@@ -117,10 +114,7 @@ class RSS():
 
     async def get(self):
         url = self.base_url + self.route
-        params = {}
-        for key in self.filter:
-            if self.filter[key]:
-                params[key] = self.filter[key]
+        params = {key: self.filter[key] for key in self.filter if self.filter[key]}
         for key in self.filterout:
             if self.filterout[key]:
                 params[key] = self.filterout[key]

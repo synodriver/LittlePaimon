@@ -25,8 +25,7 @@ async def get_avater_pic(avater_url):
     async with aiohttp.ClientSession() as session:
         async with session.get(avater_url) as resp:
             res = await resp.read()
-    avater = Image.open(BytesIO(res)).convert("RGBA").resize((60, 60))
-    return avater
+    return Image.open(BytesIO(res)).convert("RGBA").resize((60, 60))
 
 
 bg_card_color = {'1': '#C3B8A4', '2': '#C3B8A4', '3': '#4C74A7', '4': '#D7B599'}
@@ -56,7 +55,7 @@ async def draw_daily_note_card(data, uid):
     bg_draw = ImageDraw.Draw(bg_img)
 
     bg_draw.text((23, 20), '实时便笺', font=get_font(30), fill='white')
-    bg_draw.text((255, 20), 'UID：' + uid, font=get_font(30), fill='white')
+    bg_draw.text((255, 20), f'UID：{uid}', font=get_font(30), fill='white')
     # 树脂
     bg_img.alpha_composite(power, (120, 150))
     bg_draw.text((170, 145), f'{data["current_resin"]}/160', font=get_font(30), fill=bg_color[1])
@@ -76,12 +75,12 @@ async def draw_daily_note_card(data, uid):
     else:
         recover_time = datetime.datetime.now() + datetime.timedelta(seconds=int(data['home_coin_recovery_time']))
         recover_time_day = recover_time.day - datetime.datetime.now().day
-        if recover_time_day == 1:
-            recover_time_day_str = '明天'
-        elif recover_time_day == 0:
+        if recover_time_day == 0:
             recover_time_day_str = '今天'
+        elif recover_time_day == 1:
+            recover_time_day_str = '明天'
         else:
-            recover_time_day_str = str(recover_time.day) + '日'
+            recover_time_day_str = f'{str(recover_time.day)}日'
         recover_time_str = f'将于{recover_time_day_str}{recover_time.strftime("%H:%M")}攒满'
         # recover_time_str = f'将于{recover_time.strftime("%d日%H:%M")}攒满'
         bg_draw.text((360, 222), recover_time_str, font=get_font(25), fill=bg_color[1])
@@ -103,17 +102,22 @@ async def draw_daily_note_card(data, uid):
     bg_img.alpha_composite(tran, (360, 297))
     if not data['transformer']['obtained']:
         bg_draw.text((413, 298), '未获得', font=get_font(25), fill=bg_color[1])
+    elif data['transformer']['recovery_time']['reached']:
+        bg_draw.text((415, 297), '已可用', font=get_font(30), fill=bg_color[1])
     else:
-        if data['transformer']['recovery_time']['reached']:
-            bg_draw.text((415, 297), '已可用', font=get_font(30), fill=bg_color[1])
-        else:
-            bg_draw.text((413, 298), f"{data['transformer']['recovery_time']['Day']}天后", font=get_font(25),
-                         fill=bg_color[1])
+        bg_draw.text((413, 298), f"{data['transformer']['recovery_time']['Day']}天后", font=get_font(25),
+                     fill=bg_color[1])
     # 深渊
     abyss_new_month = datetime.datetime.now().month if datetime.datetime.now().day < 16 else datetime.datetime.now().month + 1
     abyss_new_day = 16 if datetime.datetime.now().day < 16 else 1
-    abyss_new = datetime.datetime.strptime('2022.' + str(abyss_new_month) + '.' + str(abyss_new_day) + '.04:00',
-                                           '%Y.%m.%d.%H:%M') - datetime.datetime.now()
+    abyss_new = (
+        datetime.datetime.strptime(
+            f'2022.{str(abyss_new_month)}.{abyss_new_day}.04:00',
+            '%Y.%m.%d.%H:%M',
+        )
+        - datetime.datetime.now()
+    )
+
     abyss_new_str = f'{abyss_new.days + 1}天后刷新' if abyss_new.days <= 8 else '已刷新'
     bg_img.alpha_composite(abyss, (520, 264))
     bg_draw.text((568, 300), '深渊', font=get_font(30), fill=bg_color[1])
@@ -139,10 +143,15 @@ async def draw_daily_note_card(data, uid):
             else:
                 bg_draw.text((300, h + 10), send_status, font=get_font(25), fill=bg_color[1])
             h += 57
-        last_finish_second = int(max([s['remained_time'] for s in data['expeditions']]))
+        last_finish_second = int(max(s['remained_time'] for s in data['expeditions']))
         if last_finish_second != 0:
             last_finish_time = datetime.datetime.now() + datetime.timedelta(seconds=last_finish_second)
-            last_finish_day = last_finish_time.day > datetime.datetime.now().day and '明天' or '今天'
+            last_finish_day = (
+                '明天'
+                if last_finish_time.day > datetime.datetime.now().day
+                else '今天'
+            )
+
             last_finish_str = f'将于{last_finish_day}{last_finish_time.strftime("%H:%M")}完成全部派遣'
             bg_draw.text((211, h + 3.5), last_finish_str, font=get_font(30), fill=bg_color[1])
         else:

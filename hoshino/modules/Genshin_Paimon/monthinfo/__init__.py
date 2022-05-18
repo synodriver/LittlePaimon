@@ -34,7 +34,7 @@ async def main(bot: Bot, event: MessageEvent):
         month_list = [str(month_now - 2), str(month_now - 1)]
     find_month = '(?P<month>' + '|'.join(month_list) + ')'
     match = re.search(find_month, msg)
-    month = match.group('month') if match else month_now
+    month = match['month'] if match else month_now
     try:
         data = await get_monthinfo_data(uid, month, use_cache=use_cache)
         if isinstance(data, str):

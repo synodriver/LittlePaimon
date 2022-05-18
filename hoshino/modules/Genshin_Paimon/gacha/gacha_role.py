@@ -40,31 +40,27 @@ with open(All_STAR_PATH, 'r', encoding='UTF-8') as f:
 
 
 def init_user_info(uid: str):
-    if uid not in user_info:
-        user_info[uid] = {}
-        user_info[uid]["fate"] = 200
-        user_info[uid]["gacha_list"] = {}
-        user_info[uid]["gacha_list"]["wish_total"] = 0
-        user_info[uid]["gacha_list"]["wish_4"] = 0
-        user_info[uid]["gacha_list"]["wish_5"] = 0
-        user_info[uid]["gacha_list"]["wish_4_up"] = 0
-        user_info[uid]["gacha_list"]["wish_5_up"] = 0
-        user_info[uid]["gacha_list"]["gacha_5_role"] = 0
-        user_info[uid]["gacha_list"]["gacha_5_weapon"] = 0
-        user_info[uid]["gacha_list"]["gacha_5_permanent"] = 0
-        user_info[uid]["gacha_list"]["gacha_4_role"] = 0
-        user_info[uid]["gacha_list"]["gacha_4_weapon"] = 0
-        user_info[uid]["gacha_list"]["gacha_4_permanent"] = 0
-        user_info[uid]["gacha_list"]["is_up_5_role"] = False
-        user_info[uid]["gacha_list"]["is_up_5_weapon"] = False
-        user_info[uid]["gacha_list"]["is_up_4_role"] = False
-        user_info[uid]["gacha_list"]["is_up_4_weapon"] = False
-        user_info[uid]["gacha_list"]["dg_name"] = ''
-        user_info[uid]["gacha_list"]["dg_time"] = 0
-        user_info[uid]["role_list"] = {}
-        user_info[uid]["role_list"]["旅行者"] = {}
-        user_info[uid]["role_list"]["旅行者"]["星级"] = '★★★★★'
-        user_info[uid]["role_list"]["旅行者"]["数量"] = 6
-        user_info[uid]["role_list"]["旅行者"]["出货"] = [0]
-        user_info[uid]["weapon_list"] = {}
-        save_user_info()
+    if uid in user_info:
+        return
+    user_info[uid] = {"fate": 200, "gacha_list": {"wish_total": 0, "wish_4": 0}}
+    user_info[uid]["gacha_list"]["wish_5"] = 0
+    user_info[uid]["gacha_list"]["wish_4_up"] = 0
+    user_info[uid]["gacha_list"]["wish_5_up"] = 0
+    user_info[uid]["gacha_list"]["gacha_5_role"] = 0
+    user_info[uid]["gacha_list"]["gacha_5_weapon"] = 0
+    user_info[uid]["gacha_list"]["gacha_5_permanent"] = 0
+    user_info[uid]["gacha_list"]["gacha_4_role"] = 0
+    user_info[uid]["gacha_list"]["gacha_4_weapon"] = 0
+    user_info[uid]["gacha_list"]["gacha_4_permanent"] = 0
+    user_info[uid]["gacha_list"]["is_up_5_role"] = False
+    user_info[uid]["gacha_list"]["is_up_5_weapon"] = False
+    user_info[uid]["gacha_list"]["is_up_4_role"] = False
+    user_info[uid]["gacha_list"]["is_up_4_weapon"] = False
+    user_info[uid]["gacha_list"]["dg_name"] = ''
+    user_info[uid]["gacha_list"]["dg_time"] = 0
+    user_info[uid]["role_list"] = {"旅行者": {}}
+    user_info[uid]["role_list"]["旅行者"]["星级"] = '★★★★★'
+    user_info[uid]["role_list"]["旅行者"]["数量"] = 6
+    user_info[uid]["role_list"]["旅行者"]["出货"] = [0]
+    user_info[uid]["weapon_list"] = {}
+    save_user_info()
